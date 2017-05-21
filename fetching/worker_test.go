@@ -44,9 +44,10 @@ func TestWorker_Work(t *testing.T) {
 	)
 
 	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
-	done := make(chan bool)
+	endReached := make(chan bool)
+	workerDone := make(chan bool)
 
-	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, done)
+	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
 	//This is designed to work in a go routine, so do things in a go routine!
 	go func() {
@@ -54,11 +55,19 @@ func TestWorker_Work(t *testing.T) {
 	}()
 
 	var result goesiv1.GetMarketsRegionIdOrders200Ok
+	var workerFinished bool
 
-	select {
-	case result = <-out:
-	case <-timeout:
-		t.Fatal("Test timed out")
+	for {
+		select {
+		case result = <-out:
+		case workerFinished = <-workerDone:
+		case <-timeout:
+			t.Fatal("Test timed out")
+		}
+
+		if workerFinished {
+			break
+		}
 	}
 
 	if result.VolumeTotal != 20000 {
@@ -104,9 +113,10 @@ func TestWorker_Work_Error(t *testing.T) {
 	)
 
 	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
-	done := make(chan bool)
+	endReached := make(chan bool)
+	workerDone := make(chan bool)
 
-	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, done)
+	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
 	//Close the outbound channel because we want the work function to panic if it publishes something
 	close(out)
@@ -146,8 +156,9 @@ func TestWorker_Work_NoResults(t *testing.T) {
 
 	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
 	doneChan := make(chan bool)
+	workerDone := make(chan bool)
 
-	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, doneChan)
+	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, doneChan, workerDone)
 
 	//Close the outbound channel because we want the work function to panic if it publishes something to out
 	close(out)
@@ -157,14 +168,22 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	}()
 
 	var done bool
+	var workerFinished bool
 
-	select {
-	case done = <-doneChan:
-	case <-timeout:
-		t.Fatal("Test timed out")
+	for {
+		select {
+		case done = <-doneChan:
+		case workerFinished = <-workerDone:
+		case <-timeout:
+			t.Fatal("Test timed out")
+		}
+
+		if workerFinished {
+			break
+		}
 	}
 
 	if !done {
-		t.Error("Should have said we were done")
+		t.Error("Should have said we reached the end")
 	}
 }

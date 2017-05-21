@@ -6,12 +6,13 @@ import (
 )
 
 type orderFetcher struct {
-	client    OrderFetcher
-	orderType string
-	page      int
-	regionId  int32
-	out       chan goesiv1.GetMarketsRegionIdOrders200Ok
-	done      chan bool
+	client     OrderFetcher
+	orderType  string
+	page       int
+	regionId   int32
+	out        chan goesiv1.GetMarketsRegionIdOrders200Ok
+	endReached chan bool
+	workerDone chan bool
 }
 
 func (w *orderFetcher) Work(id int) {
@@ -24,15 +25,16 @@ func (w *orderFetcher) Work(id int) {
 	}
 
 	if len(data) == 0 {
-		w.done <- true
-		return
+		w.endReached <- true
 	}
 
 	for _, order := range data {
 		w.out <- order
 	}
+
+	w.workerDone <- true
 }
 
-func NewWorker(client OrderFetcher, orderType string, page int, regionId int32, out chan goesiv1.GetMarketsRegionIdOrders200Ok, done chan bool) work.Worker {
-	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, done: done}
+func NewWorker(client OrderFetcher, orderType string, page int, regionId int32, out chan goesiv1.GetMarketsRegionIdOrders200Ok, done chan bool, workerDone chan bool) work.Worker {
+	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, endReached: done, workerDone: workerDone}
 }

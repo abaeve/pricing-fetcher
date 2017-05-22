@@ -1,6 +1,7 @@
 package fetching
 
 import (
+	"fmt"
 	"github.com/antihax/goesi/v1"
 	"github.com/goinggo/work"
 )
@@ -10,9 +11,9 @@ type orderFetcher struct {
 	orderType  string
 	page       int
 	regionId   int32
-	out        chan goesiv1.GetMarketsRegionIdOrders200Ok
-	endReached chan bool
-	workerDone chan bool
+	out        chan<- goesiv1.GetMarketsRegionIdOrders200Ok
+	endReached chan<- bool
+	workerDone chan<- int
 }
 
 func (w *orderFetcher) Work(id int) {
@@ -25,16 +26,21 @@ func (w *orderFetcher) Work(id int) {
 	}
 
 	if len(data) == 0 {
+		fmt.Printf("Worker: Worker %d publishing endReached\n", w.page)
+		defer fmt.Printf("Worker: Worker %d returning\n", w.page)
 		w.endReached <- true
+		return
 	}
 
 	for _, order := range data {
 		w.out <- order
 	}
 
-	w.workerDone <- true
+	fmt.Printf("Worker: Worker %d publishing done\n", w.page)
+	defer fmt.Printf("Worker: Worker %d returning\n", w.page)
+	w.workerDone <- w.page
 }
 
-func NewWorker(client OrderFetcher, orderType string, page int, regionId int32, out chan goesiv1.GetMarketsRegionIdOrders200Ok, done chan bool, workerDone chan bool) work.Worker {
-	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, endReached: done, workerDone: workerDone}
+func NewWorker(client OrderFetcher, orderType string, page int, regionId int32, out chan<- goesiv1.GetMarketsRegionIdOrders200Ok, endReached chan<- bool, workerDone chan<- int) work.Worker {
+	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, endReached: endReached, workerDone: workerDone}
 }

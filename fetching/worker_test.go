@@ -45,7 +45,7 @@ func TestWorker_Work(t *testing.T) {
 
 	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
 	endReached := make(chan bool)
-	workerDone := make(chan bool)
+	workerDone := make(chan int)
 
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
@@ -55,7 +55,7 @@ func TestWorker_Work(t *testing.T) {
 	}()
 
 	var result goesiv1.GetMarketsRegionIdOrders200Ok
-	var workerFinished bool
+	var workerFinished int
 
 	for {
 		select {
@@ -65,7 +65,7 @@ func TestWorker_Work(t *testing.T) {
 			t.Fatal("Test timed out")
 		}
 
-		if workerFinished {
+		if workerFinished == 1 {
 			break
 		}
 	}
@@ -114,7 +114,7 @@ func TestWorker_Work_Error(t *testing.T) {
 
 	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
 	endReached := make(chan bool)
-	workerDone := make(chan bool)
+	workerDone := make(chan int)
 
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
@@ -156,7 +156,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 
 	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
 	doneChan := make(chan bool)
-	workerDone := make(chan bool)
+	workerDone := make(chan int)
 
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, doneChan, workerDone)
 
@@ -168,18 +168,14 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	}()
 
 	var done bool
-	var workerFinished bool
 
+Done:
 	for {
 		select {
 		case done = <-doneChan:
-		case workerFinished = <-workerDone:
+			break Done
 		case <-timeout:
 			t.Fatal("Test timed out")
-		}
-
-		if workerFinished {
-			break
 		}
 	}
 

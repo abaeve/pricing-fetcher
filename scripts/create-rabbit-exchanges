@@ -1,7 +1,7 @@
 #!/bin/sh
 # Mainly for documentation purposes and testing purposes
 
-RABBIT_PORT=32775
+RABBIT_PORT=15672
 
 curl -i -u guest:guest -H "content-type:application/json" -XPUT -d '{"type":"fanout","auto_delete":false,"durable":false,"internal":false,"arguments":{}}' http://localhost:$RABBIT_PORT/api/exchanges/%2f/buy-orders-theforge
 curl -i -u guest:guest -H "content-type:application/json" -XPUT -d '{"type":"fanout","auto_delete":false,"durable":false,"internal":false,"arguments":{}}' http://localhost:$RABBIT_PORT/api/exchanges/%2f/buy-orders-domain

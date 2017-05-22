@@ -11,7 +11,7 @@ import (
 )
 
 func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
-	t.SkipNow()
+	//t.SkipNow()
 	mockCtrl := gomock.NewController(t)
 	mockOrderFetcher := mock_fetching.NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
@@ -166,13 +166,22 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 		fmt.Println("Test: Done received")
 	}
 
-	go func() {
+	dontPanic := make(chan bool)
+
+	go func(dontPanic chan bool) {
 		time.Sleep(time.Second * 3)
-		panic("Timed out waiting for the pool to shutdown")
-	}()
+
+		select {
+		case <-dontPanic:
+		default:
+			panic("Timed out waiting for the pool to shutdown")
+		}
+	}(dontPanic)
 
 	time.Sleep(time.Second * 2)
+	fmt.Println("Test: Shutting down the pool")
 	pool.Shutdown()
+	close(dontPanic)
 }
 
 func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
@@ -325,14 +334,22 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 		fmt.Println("Test: Done received")
 	}
 
-	go func() {
+	dontPanic := make(chan bool)
+
+	go func(dontPanic chan bool) {
 		time.Sleep(time.Second * 3)
-		panic("Timed out waiting for the pool to shutdown")
-	}()
+
+		select {
+		case <-dontPanic:
+		default:
+			panic("Timed out waiting for the pool to shutdown")
+		}
+	}(dontPanic)
 
 	time.Sleep(time.Second * 2)
 	fmt.Println("Test: Shutting down the pool")
 	pool.Shutdown()
+	close(dontPanic)
 }
 
 // A simple helper function to give me a bunch of orders for larger tests.  The numberOfOrders param should be even as this'll

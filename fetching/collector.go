@@ -36,52 +36,11 @@ func (c *orderCollector) Work(idx int) {
 	//Spawner routine, incrementing the counter here because the routine will probably not add to it before we ask it
 	//to wait
 	wg.Add(1)
-	go func(wg *sync.WaitGroup, endReached chan bool, workerDone chan int, spawnAnother, stopSpawning <-chan bool) {
-		page := 1
-
-	NoMore:
-		for {
-			select {
-			case <-spawnAnother:
-				atomic.AddInt64(&c.workerCount, 1)
-				fmt.Println("Spawner: Spawning")
-				c.pool.Run(NewWorker(c.client, "all", page, c.regionId, c.orderChan, endReached, workerDone))
-				page++
-				fmt.Println("Spawner: Done spawning")
-			case <-stopSpawning:
-				fmt.Println("Spawner: No more workers")
-				break NoMore
-			}
-		}
-
-		fmt.Println("Spawner: exiting")
-		wg.Done()
-	}(&wg, endReached, workerDone, spawnAnother, stopSpawning)
+	go c.spawner(&wg, endReached, workerDone, spawnAnother, stopSpawning)
 
 	//Monitor routine to monitor for workers shutting down or the end being reached
 	wg.Add(1)
-	go func(wg *sync.WaitGroup, monitorStart *sync.WaitGroup, endReached <-chan bool, workerDone <-chan int, spawnAnother, stopSpawning chan<- bool) {
-		monitorStart.Wait()
-		fmt.Println("Monitor: Starting")
-
-	EndReached:
-		for {
-			select {
-			case page := <-workerDone:
-				atomic.AddInt64(&c.workerCount, -1)
-				spawnAnother <- true
-				fmt.Printf("Monitor: Worker finished (page: %d)\n", page)
-			case <-endReached:
-				stopSpawning <- true
-				atomic.AddInt64(&c.workerCount, -1)
-				fmt.Println("Monitor: End Reached")
-				break EndReached
-			}
-		}
-
-		fmt.Println("Monitor: exiting")
-		wg.Done()
-	}(&wg, &monitorStart, endReached, workerDone, spawnAnother, stopSpawning)
+	go c.monitor(&wg, &monitorStart, endReached, workerDone, spawnAnother, stopSpawning)
 
 	//kick it off with the initial first batch
 	for idx := 0; idx < c.maxWorkers; idx++ {
@@ -114,14 +73,49 @@ func (c *orderCollector) Work(idx int) {
 	c.done <- true
 }
 
-type workerWrapper struct {
-	worker work.Worker
-	wg     *sync.WaitGroup
+func (c *orderCollector) spawner(wg *sync.WaitGroup, endReached chan bool, workerDone chan int, spawnAnother, stopSpawning <-chan bool) {
+	page := 1
+
+NoMore:
+	for {
+		select {
+		case <-spawnAnother:
+			atomic.AddInt64(&c.workerCount, 1)
+			fmt.Println("Spawner: Spawning")
+			c.pool.Run(NewWorker(c.client, "all", page, c.regionId, c.orderChan, endReached, workerDone))
+			page++
+			fmt.Println("Spawner: Done spawning")
+		case <-stopSpawning:
+			fmt.Println("Spawner: No more workers")
+			break NoMore
+		}
+	}
+
+	fmt.Println("Spawner: exiting")
+	wg.Done()
 }
 
-func (ww workerWrapper) Work(id int) {
+func (c *orderCollector) monitor(wg *sync.WaitGroup, monitorStart *sync.WaitGroup, endReached <-chan bool, workerDone <-chan int, spawnAnother, stopSpawning chan<- bool) {
+	monitorStart.Wait()
+	fmt.Println("Monitor: Starting")
 
-	ww.worker.Work(id)
+EndReached:
+	for {
+		select {
+		case page := <-workerDone:
+			atomic.AddInt64(&c.workerCount, -1)
+			spawnAnother <- true
+			fmt.Printf("Monitor: Worker finished (page: %d)\n", page)
+		case <-endReached:
+			stopSpawning <- true
+			atomic.AddInt64(&c.workerCount, -1)
+			fmt.Println("Monitor: End Reached")
+			break EndReached
+		}
+	}
+
+	fmt.Println("Monitor: exiting")
+	wg.Done()
 }
 
 func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done chan bool, regionId int32, all chan goesiv1.GetMarketsRegionIdOrders200Ok, workerFunc SpawnWorkerFunc) work.Worker {

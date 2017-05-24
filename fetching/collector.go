@@ -8,16 +8,13 @@ import (
 	"sync/atomic"
 )
 
-type SpawnWorkerFunc func(OrderFetcher, string, int, int32, chan<- goesiv1.GetMarketsRegionIdOrders200Ok, chan<- bool, chan<- int) work.Worker
-
 type orderCollector struct {
 	client     OrderFetcher
 	pool       *work.Pool
 	maxWorkers int
 	regionId   int32
 	orderChan  chan goesiv1.GetMarketsRegionIdOrders200Ok
-	done       chan bool
-	workerFunc SpawnWorkerFunc
+	done       chan int32
 
 	workerCount int64
 }
@@ -70,7 +67,7 @@ func (c *orderCollector) Work(idx int) {
 		}
 	}
 
-	c.done <- true
+	c.done <- c.regionId
 }
 
 func (c *orderCollector) spawner(wg *sync.WaitGroup, endReached chan bool, workerDone chan int, spawnAnother, stopSpawning <-chan bool) {
@@ -118,10 +115,7 @@ EndReached:
 	wg.Done()
 }
 
-func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done chan bool, regionId int32, all chan goesiv1.GetMarketsRegionIdOrders200Ok, workerFunc SpawnWorkerFunc) work.Worker {
-	if workerFunc == nil {
-		workerFunc = NewWorker
-	}
+func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done chan int32, regionId int32, all chan goesiv1.GetMarketsRegionIdOrders200Ok) work.Worker {
 	return &orderCollector{
 		client:     client,
 		pool:       pool,
@@ -129,6 +123,5 @@ func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done cha
 		regionId:   regionId,
 		orderChan:  all,
 		done:       done,
-		workerFunc: workerFunc,
 	}
 }

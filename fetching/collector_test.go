@@ -13,7 +13,7 @@ import (
 func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	//t.SkipNow()
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mock_fetching.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//BGN Expectations
@@ -100,13 +100,6 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
-
-	pageFive := make(map[string]interface{})
-	pageFive["page"] = 5
-
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFive).Return(
-		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
-	).MaxTimes(1)
 	//END Expectations
 
 	//We're reading from a channel, need a way to time the test out so we don't hang something up
@@ -127,9 +120,9 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	//Build the collector and everything it needs
 	//It's designed to be run as a go routine inside a pool so the variables for it's execution start
 	//need to be set inside the struct
-	done := make(chan bool)
+	done := make(chan int32)
 	all := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
-	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all, loggingWorker)
+	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all)
 
 	go collector.Work(1)
 
@@ -162,14 +155,17 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	select {
 	case <-timeout:
 		t.Fatal("Test timed out waiting for done signal")
-	case <-done:
+	case regionId := <-done:
+		if regionId != int32(12345) {
+			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionId)
+		}
 		fmt.Println("Test: Done received")
 	}
 
 	dontPanic := make(chan bool)
 
 	go func(dontPanic chan bool) {
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 1)
 
 		select {
 		case <-dontPanic:
@@ -178,7 +174,7 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 		}
 	}(dontPanic)
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Millisecond * 500)
 	fmt.Println("Test: Shutting down the pool")
 	pool.Shutdown()
 	close(dontPanic)
@@ -187,7 +183,7 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	//t.SkipNow()
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mock_fetching.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//Expectations
@@ -275,13 +271,6 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	pageFive := make(map[string]interface{})
-	pageFive["page"] = 5
-
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFive).Return(
-		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
-	).MaxTimes(1)
-
 	//We're reading from a channel, need a way to time the test out so we don't hang something up
 	//https://blog.golang.org/go-concurrency-patterns-timing-out-and
 	timeout := make(chan bool, 1)
@@ -300,9 +289,9 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	//Build the collector and everything it needs
 	//It's designed to be run as a go routine inside a pool so the variables for it's execution start
 	//need to be set inside the struct
-	done := make(chan bool)
+	done := make(chan int32)
 	all := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
-	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all, loggingWorker)
+	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all)
 
 	go collector.Work(1)
 
@@ -330,14 +319,17 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	select {
 	case <-timeout:
 		t.Fatal("Test timed out waiting for done signal")
-	case <-done:
+	case regionId := <-done:
+		if regionId != int32(12345) {
+			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionId)
+		}
 		fmt.Println("Test: Done received")
 	}
 
 	dontPanic := make(chan bool)
 
 	go func(dontPanic chan bool) {
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 1)
 
 		select {
 		case <-dontPanic:
@@ -346,7 +338,7 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 		}
 	}(dontPanic)
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Millisecond * 500)
 	fmt.Println("Test: Shutting down the pool")
 	pool.Shutdown()
 	close(dontPanic)
@@ -354,7 +346,7 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 
 // A simple helper function to give me a bunch of orders for larger tests.  The numberOfOrders param should be even as this'll
 // add half the number of sell orders and half the number of buy orders
-func addPageWithExpectations(page int, numberOfOrders, nextOrderId int64, regionId int32, mockOrderFetcher mock_fetching.MockOrderFetcher) {
+func addPageWithExpectations(page int, numberOfOrders, nextOrderId int64, regionId int32, mockOrderFetcher mocks.MockOrderFetcher) {
 	orders := []goesiv1.GetMarketsRegionIdOrders200Ok{}
 
 	for idx := int64(0); idx < numberOfOrders/2; idx++ {
@@ -395,20 +387,4 @@ func addPageWithExpectations(page int, numberOfOrders, nextOrderId int64, region
 	options["page"] = page
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", regionId, options).Return(orders, nil, nil).MaxTimes(1)
-}
-
-func loggingWorker(client OrderFetcher, orderType string, page int, regionId int32, out chan<- goesiv1.GetMarketsRegionIdOrders200Ok, done chan<- bool, workerDone chan<- int) work.Worker {
-	worker := NewWorker(client, orderType, page, regionId, out, done, workerDone)
-	return &sleepingWorker{work: worker, page: page}
-}
-
-type sleepingWorker struct {
-	work work.Worker
-	page int
-}
-
-func (sw sleepingWorker) Work(idx int) {
-	fmt.Printf("Starting worker for page %d\n", sw.page)
-	sw.work.Work(idx)
-	fmt.Printf("Worker for page %d finished\n", sw.page)
 }

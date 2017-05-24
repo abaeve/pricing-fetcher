@@ -11,7 +11,7 @@ import (
 
 func TestWorker_Work(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mock_fetching.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//We're reading from a channel, need a way to time the test out so we don't hang something up
@@ -87,7 +87,7 @@ func TestWorker_Work_Error(t *testing.T) {
 	}()
 
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mock_fetching.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	options := make(map[string]interface{})
@@ -144,7 +144,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	}()
 
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mock_fetching.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	options := make(map[string]interface{})

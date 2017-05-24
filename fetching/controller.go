@@ -34,6 +34,8 @@ type orderController struct {
 	stop           chan bool
 
 	clientDone chan int32
+
+	publishingBinder publisherBinding
 }
 
 func (o *orderController) Fetch(regionId int32) error {
@@ -61,6 +63,7 @@ func (o *orderController) Fetch(regionId int32) error {
 }
 
 func (o *orderController) GetDoneChannel() chan int32 {
+	o.publishingBinder.publishDoneToClient = true
 	return o.clientDone
 }
 
@@ -90,15 +93,19 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 	stopChan := make(chan bool)
 	clientDoneChan := make(chan int32)
 
-	//Now let the publishing binder do its magic
-	pool.Run(&publisherBinding{
+	binder := publisherBinding{
 		publisher:  orderPublisher,
 		start:      startChan,
 		done:       doneChan,
 		orders:     ordersChan,
 		stop:       stopChan,
 		clientDone: clientDoneChan,
-	})
+
+		publishDoneToClient: false,
+	}
+
+	//Now let the publishing binder do its magic
+	pool.Run(&binder)
 
 	return &orderController{
 		regionsFetcher: regionFetcher,
@@ -115,6 +122,8 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 		start:          startChan,
 		stop:           stopChan,
 		clientDone:     clientDoneChan,
+
+		publishingBinder: binder,
 	}, nil
 }
 
@@ -126,6 +135,8 @@ type publisherBinding struct {
 
 	stop       chan bool
 	clientDone chan int32
+
+	publishDoneToClient bool
 }
 
 func (pb *publisherBinding) Work(id int) {
@@ -138,7 +149,10 @@ Exiting:
 		case finishedRegion := <-pb.done:
 			fmt.Println("Publisher: Publishing State End")
 			pb.publisher.PublishStateEnd(finishedRegion)
-			pb.clientDone <- finishedRegion
+			if pb.publishDoneToClient {
+				fmt.Println("Trying to publish to client")
+				pb.clientDone <- finishedRegion
+			}
 		case startedRegion := <-pb.start:
 			fmt.Println("Publisher: Publishing State Begin")
 			pb.publisher.PublishStateBegin(startedRegion)

@@ -8,4 +8,4 @@ pipeline:
     commands:
       - go get -t -v ./...
       - go get github.com/mattn/goveralls
-      - goveralls -service=drone.io -ignore=main.go,mocks/worker_mocks.go,fetching/fetcher_mocks.go,mocks/broker_mocks.go -repotoken=${REPOTOKEN}
+      - goveralls -service=drone.io -ignore=main.go,mocks/worker_mocks.go,fetching/fetcher_mocks.go,mocks/broker_mock.go -repotoken=${REPOTOKEN}

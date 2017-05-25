@@ -36,6 +36,7 @@ type orderController struct {
 	clientDone chan int32
 
 	publishingBinder publisherBinding
+	doPublish        chan bool
 }
 
 func (o *orderController) Fetch(regionId int32) error {
@@ -63,7 +64,7 @@ func (o *orderController) Fetch(regionId int32) error {
 }
 
 func (o *orderController) GetDoneChannel() chan int32 {
-	o.publishingBinder.publishDoneToClient = true
+	o.doPublish <- true
 	return o.clientDone
 }
 
@@ -92,6 +93,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 	startChan := make(chan int32)
 	stopChan := make(chan bool)
 	clientDoneChan := make(chan int32)
+	doPublishToClient := make(chan bool)
 
 	binder := publisherBinding{
 		publisher:  orderPublisher,
@@ -102,6 +104,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 		clientDone: clientDoneChan,
 
 		publishDoneToClient: false,
+		doPublish:           doPublishToClient,
 	}
 
 	//Now let the publishing binder do its magic
@@ -124,6 +127,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 		clientDone:     clientDoneChan,
 
 		publishingBinder: binder,
+		doPublish:        doPublishToClient,
 	}, nil
 }
 
@@ -137,6 +141,7 @@ type publisherBinding struct {
 	clientDone chan int32
 
 	publishDoneToClient bool
+	doPublish           chan bool
 }
 
 func (pb *publisherBinding) Work(id int) {
@@ -159,6 +164,7 @@ Exiting:
 		case <-pb.stop:
 			fmt.Println("Publisher: Exiting")
 			break Exiting
+		case pb.publishDoneToClient = <-pb.doPublish:
 		}
 	}
 }

@@ -3,7 +3,6 @@ package fetching
 import (
 	"errors"
 	"fmt"
-	"github.com/abaeve/pricing-fetcher/mocks"
 	"github.com/antihax/goesi/v1"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -12,9 +11,9 @@ import (
 
 func TestNewController(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockRegionFetcher := mocks.NewMockRegionsFetcher(mockCtrl)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
-	mockPublisher := mocks.NewMockOrderPublisher(mockCtrl)
+	mockRegionFetcher := NewMockRegionsFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
+	mockPublisher := NewMockOrderPublisher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	var controller *orderController
@@ -42,9 +41,9 @@ func TestNewController(t *testing.T) {
 
 func TestOrderController_Fetch(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockRegionFetcher := mocks.NewMockRegionsFetcher(mockCtrl)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
-	mockPublisher := mocks.NewMockOrderPublisher(mockCtrl)
+	mockRegionFetcher := NewMockRegionsFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
+	mockPublisher := NewMockOrderPublisher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//BGN Expectations
@@ -140,10 +139,22 @@ func TestOrderController_Fetch(t *testing.T) {
 	).MaxTimes(1)
 
 	mockPublisher.EXPECT().PublishStateBegin(int32(12345))
-	mockPublisher.EXPECT().PublishOrder(&orderOne)
-	mockPublisher.EXPECT().PublishOrder(&orderTwo)
-	mockPublisher.EXPECT().PublishOrder(&orderThree)
-	mockPublisher.EXPECT().PublishOrder(&orderFour)
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderOne,
+	})
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderTwo,
+	})
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderThree,
+	})
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderFour,
+	})
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
 	//END Expectations
 
@@ -186,11 +197,11 @@ func TestNewController_Error(t *testing.T) {
 	}
 }
 
-func TestOrderController_Fetch_PublishierBindingLockCondition(t *testing.T) {
+func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockRegionFetcher := mocks.NewMockRegionsFetcher(mockCtrl)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
-	mockPublisher := mocks.NewMockOrderPublisher(mockCtrl)
+	mockRegionFetcher := NewMockRegionsFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
+	mockPublisher := NewMockOrderPublisher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//BGN Expectations
@@ -286,10 +297,22 @@ func TestOrderController_Fetch_PublishierBindingLockCondition(t *testing.T) {
 	).MaxTimes(1)
 
 	mockPublisher.EXPECT().PublishStateBegin(int32(12345)).MaxTimes(1)
-	mockPublisher.EXPECT().PublishOrder(&orderOne).MaxTimes(1)
-	mockPublisher.EXPECT().PublishOrder(&orderTwo).MaxTimes(1)
-	mockPublisher.EXPECT().PublishOrder(&orderThree).MaxTimes(1)
-	mockPublisher.EXPECT().PublishOrder(&orderFour).MaxTimes(1)
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderOne,
+	}).MaxTimes(1)
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderTwo,
+	}).MaxTimes(1)
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderThree,
+	}).MaxTimes(1)
+	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
+		RegionId:                      12345,
+		GetMarketsRegionIdOrders200Ok: orderFour,
+	}).MaxTimes(1)
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345)).MaxTimes(1)
 	//END Expectations
 
@@ -327,9 +350,9 @@ func TestOrderController_Fetch_PublishierBindingLockCondition(t *testing.T) {
 
 func TestOrderController_Fetch_RegionError(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockRegionFetcher := mocks.NewMockRegionsFetcher(mockCtrl)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
-	mockPublisher := mocks.NewMockOrderPublisher(mockCtrl)
+	mockRegionFetcher := NewMockRegionsFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
+	mockPublisher := NewMockOrderPublisher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//BGN Expectations

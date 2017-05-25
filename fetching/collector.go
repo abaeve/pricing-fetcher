@@ -2,7 +2,6 @@ package fetching
 
 import (
 	"fmt"
-	"github.com/antihax/goesi/v1"
 	"github.com/goinggo/work"
 	"sync"
 	"sync/atomic"
@@ -13,7 +12,7 @@ type orderCollector struct {
 	pool       *work.Pool
 	maxWorkers int
 	regionId   int32
-	orderChan  chan goesiv1.GetMarketsRegionIdOrders200Ok
+	orderChan  chan OrderPayload
 	done       chan int32
 
 	workerCount int64
@@ -115,7 +114,7 @@ EndReached:
 	wg.Done()
 }
 
-func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done chan int32, regionId int32, all chan goesiv1.GetMarketsRegionIdOrders200Ok) work.Worker {
+func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done chan int32, regionId int32, all chan OrderPayload) work.Worker {
 	return &orderCollector{
 		client:     client,
 		pool:       pool,

@@ -25,7 +25,7 @@ type orderController struct {
 	collectors     map[int32]work.Worker
 
 	workerDone chan int32
-	orders     chan goesiv1.GetMarketsRegionIdOrders200Ok
+	orders     chan OrderPayload
 
 	fetchedRegions map[int32]*goesiv1.GetUniverseRegionsRegionIdOk
 	maxWorkers     int
@@ -87,7 +87,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 
 	collectors := make(map[int32]work.Worker)
 	doneChan := make(chan int32)
-	ordersChan := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
+	ordersChan := make(chan OrderPayload)
 
 	regionsCache := make(map[int32]*goesiv1.GetUniverseRegionsRegionIdOk)
 	startChan := make(chan int32)
@@ -135,7 +135,7 @@ type publisherBinding struct {
 	publisher OrderPublisher
 	start     chan int32
 	done      chan int32
-	orders    chan goesiv1.GetMarketsRegionIdOrders200Ok
+	orders    chan OrderPayload
 
 	stop       chan bool
 	clientDone chan int32

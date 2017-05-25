@@ -2,7 +2,6 @@ package fetching
 
 import (
 	"errors"
-	"github.com/abaeve/pricing-fetcher/mocks"
 	"github.com/antihax/goesi/v1"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -11,7 +10,7 @@ import (
 
 func TestWorker_Work(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//We're reading from a channel, need a way to time the test out so we don't hang something up
@@ -43,7 +42,7 @@ func TestWorker_Work(t *testing.T) {
 		}, nil, nil,
 	)
 
-	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
+	out := make(chan OrderPayload)
 	endReached := make(chan bool)
 	workerDone := make(chan int)
 
@@ -54,7 +53,7 @@ func TestWorker_Work(t *testing.T) {
 		fetcher.Work(1)
 	}()
 
-	var result goesiv1.GetMarketsRegionIdOrders200Ok
+	var result OrderPayload
 	var workerFinished int
 
 	for {
@@ -87,7 +86,7 @@ func TestWorker_Work_Error(t *testing.T) {
 	}()
 
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	options := make(map[string]interface{})
@@ -112,7 +111,7 @@ func TestWorker_Work_Error(t *testing.T) {
 		}, nil, errors.New("I'm sorry Dave, I'm afraid I can't do that"),
 	)
 
-	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
+	out := make(chan OrderPayload)
 	endReached := make(chan bool)
 	workerDone := make(chan int)
 
@@ -144,7 +143,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	}()
 
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	options := make(map[string]interface{})
@@ -154,7 +153,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	)
 
-	out := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
+	out := make(chan OrderPayload)
 	doneChan := make(chan bool)
 	workerDone := make(chan int)
 

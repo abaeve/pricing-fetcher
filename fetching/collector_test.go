@@ -2,7 +2,6 @@ package fetching
 
 import (
 	"fmt"
-	"github.com/abaeve/pricing-fetcher/mocks"
 	"github.com/antihax/goesi/v1"
 	"github.com/goinggo/work"
 	"github.com/golang/mock/gomock"
@@ -13,7 +12,7 @@ import (
 func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	//t.SkipNow()
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//BGN Expectations
@@ -121,7 +120,7 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	//It's designed to be run as a go routine inside a pool so the variables for it's execution start
 	//need to be set inside the struct
 	done := make(chan int32)
-	all := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
+	all := make(chan OrderPayload)
 	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all)
 
 	go collector.Work(1)
@@ -183,7 +182,7 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	//t.SkipNow()
 	mockCtrl := gomock.NewController(t)
-	mockOrderFetcher := mocks.NewMockOrderFetcher(mockCtrl)
+	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
 	//Expectations
@@ -290,7 +289,7 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	//It's designed to be run as a go routine inside a pool so the variables for it's execution start
 	//need to be set inside the struct
 	done := make(chan int32)
-	all := make(chan goesiv1.GetMarketsRegionIdOrders200Ok)
+	all := make(chan OrderPayload)
 	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all)
 
 	go collector.Work(1)
@@ -346,7 +345,7 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 
 // A simple helper function to give me a bunch of orders for larger tests.  The numberOfOrders param should be even as this'll
 // add half the number of sell orders and half the number of buy orders
-func addPageWithExpectations(page int, numberOfOrders, nextOrderId int64, regionId int32, mockOrderFetcher mocks.MockOrderFetcher) {
+func addPageWithExpectations(page int, numberOfOrders, nextOrderId int64, regionId int32, mockOrderFetcher MockOrderFetcher) {
 	orders := []goesiv1.GetMarketsRegionIdOrders200Ok{}
 
 	for idx := int64(0); idx < numberOfOrders/2; idx++ {

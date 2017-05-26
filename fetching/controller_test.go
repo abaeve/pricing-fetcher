@@ -138,6 +138,20 @@ func TestOrderController_Fetch(t *testing.T) {
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
+	pageFive := make(map[string]interface{})
+	pageFive["page"] = int32(5)
+
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFive).Return(
+		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
+	).MaxTimes(1)
+
+	pageSix := make(map[string]interface{})
+	pageSix["page"] = int32(6)
+
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageSix).Return(
+		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
+	).MaxTimes(1)
+
 	mockPublisher.EXPECT().PublishStateBegin(int32(12345))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
@@ -316,7 +330,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345)).MaxTimes(1)
 	//END Expectations
 
-	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil, time.Millisecond*250)
+	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil, time.Millisecond*100)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")
@@ -326,7 +340,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	//https://blog.golang.org/go-concurrency-patterns-timing-out-and
 	timeout := make(chan bool, 1)
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(2 * time.Second)
 		timeout <- true
 	}()
 
@@ -337,7 +351,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	//This doesn't have to be executed in it's own goroutine but this make it easier in the test
 	go controller.Fetch(12345)
 
-	time.Sleep(time.Millisecond * 500)
+	time.Sleep(time.Second)
 
 	controller.Stop()
 

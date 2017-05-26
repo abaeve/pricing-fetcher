@@ -73,13 +73,13 @@ func (o *orderController) Stop() {
 	o.pool.Shutdown()
 }
 
-func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orderPublisher OrderPublisher, maxRegions int, maxDownloaders int, logFunc func(string)) (OrderController, error) {
+func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orderPublisher OrderPublisher, maxRegions int, maxDownloaders int, logFunc func(string), poolReportDelay time.Duration) (OrderController, error) {
 	if logFunc == nil {
 		logFunc = defaultLogFunc
 	}
 
 	//Our pool will contain one routine per download, one per region collector and one for the publisher (or rather the routine that calls the publishers method
-	pool, _ := work.New(maxDownloaders+maxRegions+1, time.Second, logFunc)
+	pool, _ := work.New(maxDownloaders+maxRegions+1, poolReportDelay, logFunc)
 
 	if maxDownloaders == 0 || maxRegions == 0 {
 		return nil, errors.New("Could not create a pool with only 1 worker")

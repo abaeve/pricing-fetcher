@@ -18,7 +18,7 @@ func TestNewController(t *testing.T) {
 
 	var controller *orderController
 
-	ctrler, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 5, 10, nil)
+	ctrler, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 5, 10, nil, time.Millisecond*250)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")
@@ -158,7 +158,7 @@ func TestOrderController_Fetch(t *testing.T) {
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
 	//END Expectations
 
-	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil)
+	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil, time.Millisecond*250)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")
@@ -190,7 +190,7 @@ func TestOrderController_Fetch(t *testing.T) {
 }
 
 func TestNewController_Error(t *testing.T) {
-	_, err := NewController(nil, nil, nil, 0, 0, nil)
+	_, err := NewController(nil, nil, nil, 0, 0, nil, time.Millisecond*250)
 
 	if err == nil {
 		t.Error("Should have received an error due to pool workers")
@@ -316,7 +316,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345)).MaxTimes(1)
 	//END Expectations
 
-	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil)
+	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil, time.Millisecond*250)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")
@@ -358,7 +358,7 @@ func TestOrderController_Fetch_RegionError(t *testing.T) {
 	//BGN Expectations
 	mockRegionFetcher.EXPECT().GetUniverseRegionsRegionId(int32(1237821798), gomock.Nil()).Return(goesiv1.GetUniverseRegionsRegionIdOk{}, nil, errors.New("I'm sorry Dave, I'm afraid I can't do that"))
 
-	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 5, 10, nil)
+	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 5, 10, nil, time.Millisecond*250)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")

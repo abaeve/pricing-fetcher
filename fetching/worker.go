@@ -15,11 +15,11 @@ type OrderPayload struct {
 type orderFetcher struct {
 	client     OrderFetcher
 	orderType  string
-	page       int
+	page       int32
 	regionId   int32
 	out        chan<- OrderPayload
 	endReached chan<- bool
-	workerDone chan<- int
+	workerDone chan<- int32
 }
 
 func (w *orderFetcher) Work(id int) {
@@ -50,6 +50,6 @@ func (w *orderFetcher) Work(id int) {
 	w.workerDone <- w.page
 }
 
-func NewWorker(client OrderFetcher, orderType string, page int, regionId int32, out chan<- OrderPayload, endReached chan<- bool, workerDone chan<- int) work.Worker {
+func NewWorker(client OrderFetcher, orderType string, page int32, regionId int32, out chan<- OrderPayload, endReached chan<- bool, workerDone chan<- int32) work.Worker {
 	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, endReached: endReached, workerDone: workerDone}
 }

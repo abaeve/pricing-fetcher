@@ -22,7 +22,7 @@ func (c *orderCollector) Work(idx int) {
 	wg := sync.WaitGroup{}
 	endReached := make(chan bool)
 	stopSpawning := make(chan bool)
-	workerDone := make(chan int)
+	workerDone := make(chan int32)
 	spawnAnother := make(chan bool)
 
 	//We don't want the monitor to start until we've kicked off the first batch.
@@ -69,8 +69,8 @@ func (c *orderCollector) Work(idx int) {
 	c.done <- c.regionId
 }
 
-func (c *orderCollector) spawner(wg *sync.WaitGroup, endReached chan bool, workerDone chan int, spawnAnother, stopSpawning <-chan bool) {
-	page := 1
+func (c *orderCollector) spawner(wg *sync.WaitGroup, endReached chan bool, workerDone chan int32, spawnAnother, stopSpawning <-chan bool) {
+	page := int32(1)
 
 NoMore:
 	for {
@@ -91,7 +91,7 @@ NoMore:
 	wg.Done()
 }
 
-func (c *orderCollector) monitor(wg *sync.WaitGroup, monitorStart *sync.WaitGroup, endReached <-chan bool, workerDone <-chan int, spawnAnother, stopSpawning chan<- bool) {
+func (c *orderCollector) monitor(wg *sync.WaitGroup, monitorStart *sync.WaitGroup, endReached <-chan bool, workerDone <-chan int32, spawnAnother, stopSpawning chan<- bool) {
 	monitorStart.Wait()
 	fmt.Println("Monitor: Starting")
 

@@ -109,14 +109,14 @@ func TestOrderController_Fetch(t *testing.T) {
 	}
 
 	pageOne := make(map[string]interface{})
-	pageOne["page"] = 1
+	pageOne["page"] = int32(1)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderOne, orderTwo}, nil, nil,
 	)
 
 	pageTwo := make(map[string]interface{})
-	pageTwo["page"] = 2
+	pageTwo["page"] = int32(2)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderThree, orderFour}, nil, nil,
@@ -125,14 +125,14 @@ func TestOrderController_Fetch(t *testing.T) {
 	//We have to allow both pages 3 and 4 because this interface is stupid and this case is spawning workers at a time
 	//I guess CCP don't really want people threading these requests easily?
 	pageThree := make(map[string]interface{})
-	pageThree["page"] = 3
+	pageThree["page"] = int32(3)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
 	pageFour := make(map[string]interface{})
-	pageFour["page"] = 4
+	pageFour["page"] = int32(4)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
@@ -158,7 +158,7 @@ func TestOrderController_Fetch(t *testing.T) {
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
 	//END Expectations
 
-	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 5, 10, nil)
+	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")
@@ -267,14 +267,14 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	}
 
 	pageOne := make(map[string]interface{})
-	pageOne["page"] = 1
+	pageOne["page"] = int32(1)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderOne, orderTwo}, nil, nil,
 	).MaxTimes(1)
 
 	pageTwo := make(map[string]interface{})
-	pageTwo["page"] = 2
+	pageTwo["page"] = int32(2)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderThree, orderFour}, nil, nil,
@@ -283,14 +283,14 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	//We have to allow both pages 3 and 4 because this interface is stupid and this case is spawning workers at a time
 	//I guess CCP don't really want people threading these requests easily?
 	pageThree := make(map[string]interface{})
-	pageThree["page"] = 3
+	pageThree["page"] = int32(3)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
 	pageFour := make(map[string]interface{})
-	pageFour["page"] = 4
+	pageFour["page"] = int32(4)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
@@ -316,7 +316,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345)).MaxTimes(1)
 	//END Expectations
 
-	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 5, 10, nil)
+	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil)
 
 	if err != nil {
 		t.Error("Received an error when none were expected")

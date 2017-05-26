@@ -22,7 +22,7 @@ func TestWorker_Work(t *testing.T) {
 	}()
 
 	options := make(map[string]interface{})
-	options["page"] = 1
+	options["page"] = int32(1)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -44,7 +44,7 @@ func TestWorker_Work(t *testing.T) {
 
 	out := make(chan OrderPayload)
 	endReached := make(chan bool)
-	workerDone := make(chan int)
+	workerDone := make(chan int32)
 
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
@@ -54,7 +54,7 @@ func TestWorker_Work(t *testing.T) {
 	}()
 
 	var result OrderPayload
-	var workerFinished int
+	var workerFinished int32
 
 	for {
 		select {
@@ -90,7 +90,7 @@ func TestWorker_Work_Error(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	options := make(map[string]interface{})
-	options["page"] = 1
+	options["page"] = int32(1)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -113,7 +113,7 @@ func TestWorker_Work_Error(t *testing.T) {
 
 	out := make(chan OrderPayload)
 	endReached := make(chan bool)
-	workerDone := make(chan int)
+	workerDone := make(chan int32)
 
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
@@ -147,7 +147,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	options := make(map[string]interface{})
-	options["page"] = 1
+	options["page"] = int32(1)
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
@@ -155,7 +155,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 
 	out := make(chan OrderPayload)
 	doneChan := make(chan bool)
-	workerDone := make(chan int)
+	workerDone := make(chan int32)
 
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, doneChan, workerDone)
 

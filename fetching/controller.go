@@ -79,7 +79,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 	}
 
 	//Our pool will contain one routine per download, one per region collector and one for the publisher (or rather the routine that calls the publishers method
-	pool, _ := work.New(maxDownloaders+maxRegions+1, time.Minute, logFunc)
+	pool, _ := work.New(maxDownloaders+maxRegions+1, time.Second, logFunc)
 
 	if maxDownloaders == 0 || maxRegions == 0 {
 		return nil, errors.New("Could not create a pool with only 1 worker")
@@ -149,7 +149,7 @@ Exiting:
 	for {
 		select {
 		case order := <-pb.orders:
-			fmt.Println("Publisher: Publishing an order")
+			//fmt.Println("Publisher: Publishing an order")
 			pb.publisher.PublishOrder(&order)
 		case finishedRegion := <-pb.done:
 			fmt.Println("Publisher: Publishing State End")

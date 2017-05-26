@@ -23,7 +23,7 @@ func init() {
 
 	orderPublisher := fetching.NewPublisher(apiClient.V1.UniverseApi, broker)
 
-	controller, _ = fetching.NewController(apiClient.V1.UniverseApi, apiClient.V1.MarketApi, orderPublisher, 4, 16, poolLog)
+	controller, _ = fetching.NewController(apiClient.V1.UniverseApi, apiClient.V1.MarketApi, orderPublisher, 4, 16, poolLog, time.Second)
 }
 
 func main() {

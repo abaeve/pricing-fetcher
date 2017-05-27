@@ -15,7 +15,7 @@ type orderCollector struct {
 	orderChan  chan OrderPayload
 	done       chan int32
 
-	workerCount int64
+	workerCount workerCounter
 }
 
 func (c *orderCollector) Work(idx int) {
@@ -52,17 +52,17 @@ func (c *orderCollector) Work(idx int) {
 	fmt.Println("Main: Waiting")
 	wg.Wait()
 	fmt.Println("Main: Done waiting")
-	fmt.Printf("Main: Workers running %d\n", atomic.LoadInt64(&c.workerCount))
+	fmt.Printf("Main: Workers running %d\n", c.workerCount.Current())
 
-	for atomic.LoadInt64(&c.workerCount) > 0 {
-		fmt.Printf("Main: %d Workers still running, allowing them to exit\n", atomic.LoadInt64(&c.workerCount))
+	for c.workerCount.Current() > 0 {
+		fmt.Printf("Main: %d Workers still running, allowing them to exit\n", c.workerCount.Current())
 		select {
 		case <-workerDone:
 			fmt.Println("Main: Worker said they're done")
-			atomic.AddInt64(&c.workerCount, -1)
+			c.workerCount.Remove()
 		case <-endReached:
 			fmt.Println("Main: Worker said end reached")
-			atomic.AddInt64(&c.workerCount, -1)
+			c.workerCount.Remove()
 		}
 	}
 
@@ -78,7 +78,7 @@ func (c *orderCollector) spawner(wg *sync.WaitGroup, endReached chan bool, worke
 	for {
 		select {
 		case <-spawnAnother:
-			atomic.AddInt64(&c.workerCount, 1)
+			c.workerCount.Add()
 			fmt.Println("Spawner: Spawning")
 			c.pool.Run(NewWorker(c.client, "all", page, c.regionId, c.orderChan, endReached, workerDone))
 			page++
@@ -105,12 +105,12 @@ func (c *orderCollector) monitor(wg *sync.WaitGroup, monitorStart *sync.WaitGrou
 	for {
 		select {
 		case page := <-workerDone:
-			atomic.AddInt64(&c.workerCount, -1)
+			c.workerCount.Remove()
 			spawnAnother <- true
 			fmt.Printf("Monitor: Worker finished (page: %d)\n", page)
 		case <-endReached:
 			stopSpawning <- true
-			atomic.AddInt64(&c.workerCount, -1)
+			c.workerCount.Remove()
 			fmt.Println("Monitor: End Reached")
 			exit = true
 		}
@@ -133,4 +133,28 @@ func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done cha
 		orderChan:  all,
 		done:       done,
 	}
+}
+
+type workerCounter struct {
+	count int64
+	lock  sync.Mutex
+}
+
+func (wc *workerCounter) Add() {
+	wc.lock.Lock()
+	atomic.AddInt64(&wc.count, 1)
+	wc.lock.Unlock()
+}
+
+func (wc *workerCounter) Remove() {
+	wc.lock.Lock()
+	atomic.AddInt64(&wc.count, -1)
+	wc.lock.Unlock()
+}
+
+func (wc *workerCounter) Current() int64 {
+	wc.lock.Lock()
+	defer wc.lock.Unlock()
+
+	return atomic.LoadInt64(&wc.count)
 }

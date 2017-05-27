@@ -7,6 +7,10 @@ import (
 	"github.com/gregjones/httpcache"
 	"github.com/micro/go-plugins/broker/rabbitmq"
 	"time"
+
+	_ "net/http/pprof"
+	"net/http"
+	"log"
 )
 
 var controller fetching.OrderController
@@ -24,6 +28,20 @@ func init() {
 	orderPublisher := fetching.NewPublisher(apiClient.V1.UniverseApi, broker)
 
 	controller, _ = fetching.NewController(apiClient.V1.UniverseApi, apiClient.V1.MarketApi, orderPublisher, 4, 16, poolLog, time.Second)
+
+	done := controller.GetDoneChannel()
+
+	//I don't really care but reading from this channel is mandatory now
+	go func() {
+		for {
+			<-done
+			fmt.Println("Something finished")
+		}
+	}()
+
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 }
 
 func main() {

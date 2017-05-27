@@ -23,7 +23,7 @@ type orderPublisher struct {
 	regionCache map[int32]string
 }
 
-func (op orderPublisher) PublishOrder(order *OrderPayload) {
+func (op *orderPublisher) PublishOrder(order *OrderPayload) {
 	payload, err := json.Marshal(order)
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (op orderPublisher) PublishOrder(order *OrderPayload) {
 	})
 }
 
-func (op orderPublisher) PublishStateBegin(regionId int32) {
+func (op *orderPublisher) PublishStateBegin(regionId int32) {
 	op.regionLock[regionId] = &sync.WaitGroup{}
 	op.regionLock[regionId].Add(1)
 	if len(op.regionCache[regionId]) == 0 || op.regionCache[regionId] == defaultRegion {
@@ -66,7 +66,7 @@ func (op orderPublisher) PublishStateBegin(regionId int32) {
 	})
 }
 
-func (op orderPublisher) PublishStateEnd(regionId int32) {
+func (op *orderPublisher) PublishStateEnd(regionId int32) {
 	op.broker.Publish(op.regionCache[regionId]+".state.end", &broker.Message{
 		Body: []byte("Ending"),
 	})
@@ -80,7 +80,7 @@ func NewPublisher(regionFetcher RegionsFetcher, brkr broker.Broker) OrderPublish
 	regionLock := make(map[int32]*sync.WaitGroup)
 	regionCache := make(map[int32]string)
 
-	return orderPublisher{
+	return &orderPublisher{
 		broker:        brkr,
 		regionFetcher: regionFetcher,
 		regionLock:    regionLock,

@@ -16,7 +16,7 @@ func TestNewRabbitMQPublisher(t *testing.T) {
 	mockBroker := mocks.NewMockBroker(mockCtrl)
 	defer mockCtrl.Finish()
 
-	publisher := NewPublisher(mockRegionFetcher, mockBroker).(orderPublisher)
+	publisher := NewPublisher(mockRegionFetcher, mockBroker).(*orderPublisher)
 
 	if mockBroker != publisher.broker {
 		t.Errorf("Expected (%+v) but received (%+v) for broker address matching", mockBroker, publisher.broker)

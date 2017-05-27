@@ -212,7 +212,6 @@ func TestNewController_Error(t *testing.T) {
 }
 
 func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
-	t.SkipNow()
 	mockCtrl := gomock.NewController(t)
 	mockRegionFetcher := NewMockRegionsFetcher(mockCtrl)
 	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
@@ -342,6 +341,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 	timeout := make(chan bool, 1)
 	go func() {
 		time.Sleep(2 * time.Second)
+		fmt.Println("Timeout routing timed out")
 		timeout <- true
 	}()
 

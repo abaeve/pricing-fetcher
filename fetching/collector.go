@@ -55,7 +55,7 @@ func (c *orderCollector) Work(idx int) {
 	fmt.Printf("Main: Workers running %d\n", atomic.LoadInt64(&c.workerCount))
 
 	for atomic.LoadInt64(&c.workerCount) > 0 {
-		fmt.Println("Main: Workers still running, allowing them to exit")
+		fmt.Printf("Main: %d Workers still running, allowing them to exit\n", atomic.LoadInt64(&c.workerCount))
 		select {
 		case <-workerDone:
 			fmt.Println("Main: Worker said they're done")
@@ -66,13 +66,15 @@ func (c *orderCollector) Work(idx int) {
 		}
 	}
 
+	fmt.Println("Main: exiting")
+	defer fmt.Println("Main: returning")
 	c.done <- c.regionId
 }
 
 func (c *orderCollector) spawner(wg *sync.WaitGroup, endReached chan bool, workerDone chan int32, spawnAnother, stopSpawning <-chan bool) {
 	page := int32(1)
+	exit := false
 
-NoMore:
 	for {
 		select {
 		case <-spawnAnother:
@@ -83,7 +85,11 @@ NoMore:
 			fmt.Println("Spawner: Done spawning")
 		case <-stopSpawning:
 			fmt.Println("Spawner: No more workers")
-			break NoMore
+			exit = true
+		}
+
+		if exit {
+			break
 		}
 	}
 
@@ -94,8 +100,8 @@ NoMore:
 func (c *orderCollector) monitor(wg *sync.WaitGroup, monitorStart *sync.WaitGroup, endReached <-chan bool, workerDone <-chan int32, spawnAnother, stopSpawning chan<- bool) {
 	monitorStart.Wait()
 	fmt.Println("Monitor: Starting")
+	exit := false
 
-EndReached:
 	for {
 		select {
 		case page := <-workerDone:
@@ -106,7 +112,11 @@ EndReached:
 			stopSpawning <- true
 			atomic.AddInt64(&c.workerCount, -1)
 			fmt.Println("Monitor: End Reached")
-			break EndReached
+			exit = true
+		}
+
+		if exit {
+			break
 		}
 	}
 

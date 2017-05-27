@@ -36,7 +36,7 @@ type orderController struct {
 	clientDone chan int32
 
 	publishingBinder publisherBinding
-	doPublish        chan bool
+	//doPublish        chan bool
 }
 
 func (o *orderController) Fetch(regionId int32) error {
@@ -56,15 +56,15 @@ func (o *orderController) Fetch(regionId int32) error {
 
 	//Not in the mood to wait for it to queue it... just do it
 	o.start <- regionId
-	go func() {
-		o.pool.Run(o.collectors[regionId])
-	}()
+	//go func() {
+	o.pool.Run(o.collectors[regionId])
+	//}()
 
 	return nil
 }
 
 func (o *orderController) GetDoneChannel() chan int32 {
-	o.doPublish <- true
+	//o.doPublish <- true
 	return o.clientDone
 }
 
@@ -93,7 +93,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 	startChan := make(chan int32)
 	stopChan := make(chan bool)
 	clientDoneChan := make(chan int32)
-	doPublishToClient := make(chan bool)
+	//doPublishToClient := make(chan bool)
 
 	binder := publisherBinding{
 		publisher:  orderPublisher,
@@ -103,8 +103,8 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 		stop:       stopChan,
 		clientDone: clientDoneChan,
 
-		publishDoneToClient: false,
-		doPublish:           doPublishToClient,
+		//publishDoneToClient: false,
+		//doPublish:           doPublishToClient,
 	}
 
 	//Now let the publishing binder do its magic
@@ -127,7 +127,7 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 		clientDone:     clientDoneChan,
 
 		publishingBinder: binder,
-		doPublish:        doPublishToClient,
+		//doPublish:        doPublishToClient,
 	}, nil
 }
 
@@ -140,12 +140,13 @@ type publisherBinding struct {
 	stop       chan bool
 	clientDone chan int32
 
-	publishDoneToClient bool
-	doPublish           chan bool
+	//publishDoneToClient bool
+	//doPublish           chan bool
 }
 
 func (pb *publisherBinding) Work(id int) {
-Exiting:
+	done := false
+
 	for {
 		select {
 		case order := <-pb.orders:
@@ -154,17 +155,21 @@ Exiting:
 		case finishedRegion := <-pb.done:
 			fmt.Println("Publisher: Publishing State End")
 			pb.publisher.PublishStateEnd(finishedRegion)
-			if pb.publishDoneToClient {
-				fmt.Println("Trying to publish to client")
-				pb.clientDone <- finishedRegion
-			}
+			//if pb.publishDoneToClient {
+			fmt.Println("Trying to publish to client")
+			pb.clientDone <- finishedRegion
+			//}
 		case startedRegion := <-pb.start:
 			fmt.Println("Publisher: Publishing State Begin")
 			pb.publisher.PublishStateBegin(startedRegion)
 		case <-pb.stop:
 			fmt.Println("Publisher: Exiting")
-			break Exiting
-		case pb.publishDoneToClient = <-pb.doPublish:
+			done = true
+			//case pb.publishDoneToClient = <-pb.doPublish:
+		}
+
+		if done {
+			break
 		}
 	}
 }

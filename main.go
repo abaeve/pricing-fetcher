@@ -2,21 +2,28 @@ package main
 
 import (
 	"fmt"
+	"github.com/PuerkitoBio/rehttp"
 	"github.com/abaeve/pricing-fetcher/fetching"
 	"github.com/antihax/goesi"
 	"github.com/gregjones/httpcache"
 	"github.com/micro/go-plugins/broker/rabbitmq"
 	"time"
 
-	_ "net/http/pprof"
+	//"log"
 	"net/http"
-	"log"
+	//_ "net/http/pprof"
 )
 
 var controller fetching.OrderController
 
 func init() {
-	httpClient := httpcache.NewMemoryCacheTransport().Client()
+	httpClient := &http.Client{
+		Transport: rehttp.NewTransport(
+			httpcache.NewMemoryCacheTransport(),
+			rehttp.RetryAll(rehttp.RetryMaxRetries(3), rehttp.RetryStatuses(500)),
+			rehttp.ConstDelay(time.Second*3),
+		),
+	}
 
 	// Get the ESI API Client
 	apiClient := goesi.NewAPIClient(httpClient, "aba-pricing-fetcher maurer.it@gmail.com https://github.com/abaeve/pricing-fetcher")
@@ -39,9 +46,9 @@ func init() {
 		}
 	}()
 
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
+	//go func() {
+	//	log.Println(http.ListenAndServe("localhost:6060", nil))
+	//}()
 }
 
 func main() {

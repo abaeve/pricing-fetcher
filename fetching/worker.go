@@ -28,6 +28,8 @@ func (w *orderFetcher) Work(id int) {
 	data, _, err := w.client.GetMarketsRegionIdOrders(w.orderType, w.regionId, options)
 
 	if err != nil {
+		fmt.Printf("Worker: Worker %d encountered an error\n", w.page)
+		w.workerDone <- w.page
 		return
 	}
 

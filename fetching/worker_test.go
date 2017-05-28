@@ -49,9 +49,7 @@ func TestWorker_Work(t *testing.T) {
 	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
 
 	//This is designed to work in a go routine, so do things in a go routine!
-	go func() {
-		fetcher.Work(1)
-	}()
+	go fetcher.Work(1)
 
 	var result OrderPayload
 	var workerFinished int32
@@ -120,7 +118,23 @@ func TestWorker_Work_Error(t *testing.T) {
 	//Close the outbound channel because we want the work function to panic if it publishes something
 	close(out)
 
-	fetcher.Work(1)
+	go fetcher.Work(1)
+
+	//We're reading from a channel, need a way to time the test out so we don't hang something up
+	//https://blog.golang.org/go-concurrency-patterns-timing-out-and
+	timeout := make(chan bool, 1)
+	go func() {
+		time.Sleep(5 * time.Second)
+		timeout <- true
+	}()
+
+	select {
+	case <-workerDone:
+	case <-endReached:
+		t.Fatal("Should have published workerDone instead.")
+	case <-timeout:
+		t.Fatal("Shouldn't have timed out.")
+	}
 }
 
 func TestWorker_Work_NoResults(t *testing.T) {
@@ -162,9 +176,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	//Close the outbound channel because we want the work function to panic if it publishes something to out
 	close(out)
 
-	go func() {
-		fetcher.Work(1)
-	}()
+	go fetcher.Work(1)
 
 	var done bool
 

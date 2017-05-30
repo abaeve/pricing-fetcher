@@ -16,7 +16,7 @@ import (
 
 var controller fetching.OrderController
 
-func init() {
+func initialize() {
 	httpClient := &http.Client{
 		Transport: rehttp.NewTransport(
 			httpcache.NewMemoryCacheTransport(),
@@ -52,6 +52,8 @@ func init() {
 }
 
 func main() {
+	initialize()
+
 	for idx := 0; idx < 6; idx++ {
 		//The Forge
 		controller.Fetch(10000002)

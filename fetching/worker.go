@@ -2,8 +2,9 @@ package fetching
 
 import (
 	"fmt"
-	"github.com/antihax/goesi/v1"
+	goesiv1 "github.com/antihax/goesi/esi"
 	"github.com/goinggo/work"
+	"golang.org/x/net/context"
 )
 
 type OrderPayload struct {
@@ -25,7 +26,7 @@ type orderFetcher struct {
 func (w *orderFetcher) Work(id int) {
 	options := make(map[string]interface{})
 	options["page"] = w.page
-	data, _, err := w.client.GetMarketsRegionIdOrders(w.orderType, w.regionId, options)
+	data, _, err := w.client.GetMarketsRegionIdOrders(context.Background(), w.orderType, w.regionId, options)
 
 	if err != nil {
 		fmt.Printf("Worker: Worker %d encountered an error\n", w.page)

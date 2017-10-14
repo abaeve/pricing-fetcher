@@ -1,9 +1,10 @@
 package fetching
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"github.com/antihax/goesi/v1"
+	goesiv1 "github.com/antihax/goesi/esi"
 	"github.com/goinggo/work"
 	"time"
 )
@@ -41,7 +42,7 @@ type orderController struct {
 
 func (o *orderController) Fetch(regionId int32) error {
 	if o.fetchedRegions[regionId] == nil {
-		region, _, err := o.regionsFetcher.GetUniverseRegionsRegionId(regionId, nil)
+		region, _, err := o.regionsFetcher.GetUniverseRegionsRegionId(context.Background(), regionId, nil)
 
 		if err != nil {
 			return err

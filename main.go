@@ -5,7 +5,6 @@ import (
 	"github.com/PuerkitoBio/rehttp"
 	"github.com/abaeve/pricing-fetcher/fetching"
 	"github.com/antihax/goesi"
-	"github.com/gregjones/httpcache"
 	"github.com/micro/go-plugins/broker/rabbitmq"
 	"time"
 
@@ -19,7 +18,7 @@ var controller fetching.OrderController
 func initialize() {
 	httpClient := &http.Client{
 		Transport: rehttp.NewTransport(
-			httpcache.NewMemoryCacheTransport(),
+			nil,
 			rehttp.RetryAll(rehttp.RetryMaxRetries(3), rehttp.RetryStatuses(500)),
 			rehttp.ConstDelay(time.Second*3),
 		),
@@ -32,9 +31,9 @@ func initialize() {
 	broker.Init()
 	broker.Connect()
 
-	orderPublisher := fetching.NewPublisher(apiClient.V1.UniverseApi, broker)
+	orderPublisher := fetching.NewPublisher(apiClient.ESI.UniverseApi, broker)
 
-	controller, _ = fetching.NewController(apiClient.V1.UniverseApi, apiClient.V1.MarketApi, orderPublisher, 4, 16, poolLog, time.Second)
+	controller, _ = fetching.NewController(apiClient.ESI.UniverseApi, apiClient.ESI.MarketApi, orderPublisher, 4, 16, poolLog, time.Second)
 
 	done := controller.GetDoneChannel()
 

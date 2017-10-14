@@ -4,8 +4,9 @@
 package fetching
 
 import (
-	v1 "github.com/antihax/goesi/v1"
+	esi "github.com/antihax/goesi/esi"
 	gomock "github.com/golang/mock/gomock"
+	context "golang.org/x/net/context"
 	http "net/http"
 )
 
@@ -30,28 +31,28 @@ func (_m *MockRegionsFetcher) EXPECT() *_MockRegionsFetcherRecorder {
 	return _m.recorder
 }
 
-func (_m *MockRegionsFetcher) GetUniverseRegions(_param0 map[string]interface{}) ([]int32, *http.Response, error) {
-	ret := _m.ctrl.Call(_m, "GetUniverseRegions", _param0)
+func (_m *MockRegionsFetcher) GetUniverseRegions(_param0 context.Context, _param1 map[string]interface{}) ([]int32, *http.Response, error) {
+	ret := _m.ctrl.Call(_m, "GetUniverseRegions", _param0, _param1)
 	ret0, _ := ret[0].([]int32)
 	ret1, _ := ret[1].(*http.Response)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-func (_mr *_MockRegionsFetcherRecorder) GetUniverseRegions(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUniverseRegions", arg0)
+func (_mr *_MockRegionsFetcherRecorder) GetUniverseRegions(arg0, arg1 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUniverseRegions", arg0, arg1)
 }
 
-func (_m *MockRegionsFetcher) GetUniverseRegionsRegionId(_param0 int32, _param1 map[string]interface{}) (v1.GetUniverseRegionsRegionIdOk, *http.Response, error) {
-	ret := _m.ctrl.Call(_m, "GetUniverseRegionsRegionId", _param0, _param1)
-	ret0, _ := ret[0].(v1.GetUniverseRegionsRegionIdOk)
+func (_m *MockRegionsFetcher) GetUniverseRegionsRegionId(_param0 context.Context, _param1 int32, _param2 map[string]interface{}) (esi.GetUniverseRegionsRegionIdOk, *http.Response, error) {
+	ret := _m.ctrl.Call(_m, "GetUniverseRegionsRegionId", _param0, _param1, _param2)
+	ret0, _ := ret[0].(esi.GetUniverseRegionsRegionIdOk)
 	ret1, _ := ret[1].(*http.Response)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-func (_mr *_MockRegionsFetcherRecorder) GetUniverseRegionsRegionId(arg0, arg1 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUniverseRegionsRegionId", arg0, arg1)
+func (_mr *_MockRegionsFetcherRecorder) GetUniverseRegionsRegionId(arg0, arg1, arg2 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetUniverseRegionsRegionId", arg0, arg1, arg2)
 }
 
 // Mock of OrderFetcher interface
@@ -75,16 +76,16 @@ func (_m *MockOrderFetcher) EXPECT() *_MockOrderFetcherRecorder {
 	return _m.recorder
 }
 
-func (_m *MockOrderFetcher) GetMarketsRegionIdOrders(_param0 string, _param1 int32, _param2 map[string]interface{}) ([]v1.GetMarketsRegionIdOrders200Ok, *http.Response, error) {
-	ret := _m.ctrl.Call(_m, "GetMarketsRegionIdOrders", _param0, _param1, _param2)
-	ret0, _ := ret[0].([]v1.GetMarketsRegionIdOrders200Ok)
+func (_m *MockOrderFetcher) GetMarketsRegionIdOrders(_param0 context.Context, _param1 string, _param2 int32, _param3 map[string]interface{}) ([]esi.GetMarketsRegionIdOrders200Ok, *http.Response, error) {
+	ret := _m.ctrl.Call(_m, "GetMarketsRegionIdOrders", _param0, _param1, _param2, _param3)
+	ret0, _ := ret[0].([]esi.GetMarketsRegionIdOrders200Ok)
 	ret1, _ := ret[1].(*http.Response)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-func (_mr *_MockOrderFetcherRecorder) GetMarketsRegionIdOrders(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMarketsRegionIdOrders", arg0, arg1, arg2)
+func (_mr *_MockOrderFetcherRecorder) GetMarketsRegionIdOrders(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMarketsRegionIdOrders", arg0, arg1, arg2, arg3)
 }
 
 // Mock of HistoryFetcher interface
@@ -108,16 +109,16 @@ func (_m *MockHistoryFetcher) EXPECT() *_MockHistoryFetcherRecorder {
 	return _m.recorder
 }
 
-func (_m *MockHistoryFetcher) GetMarketsRegionIdHistory(_param0 int32, _param1 int32, _param2 map[string]interface{}) ([]v1.GetMarketsRegionIdHistory200Ok, *http.Response, error) {
-	ret := _m.ctrl.Call(_m, "GetMarketsRegionIdHistory", _param0, _param1, _param2)
-	ret0, _ := ret[0].([]v1.GetMarketsRegionIdHistory200Ok)
+func (_m *MockHistoryFetcher) GetMarketsRegionIdHistory(_param0 context.Context, _param1 int32, _param2 int32, _param3 map[string]interface{}) ([]esi.GetMarketsRegionIdHistory200Ok, *http.Response, error) {
+	ret := _m.ctrl.Call(_m, "GetMarketsRegionIdHistory", _param0, _param1, _param2, _param3)
+	ret0, _ := ret[0].([]esi.GetMarketsRegionIdHistory200Ok)
 	ret1, _ := ret[1].(*http.Response)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
 
-func (_mr *_MockHistoryFetcherRecorder) GetMarketsRegionIdHistory(arg0, arg1, arg2 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMarketsRegionIdHistory", arg0, arg1, arg2)
+func (_mr *_MockHistoryFetcherRecorder) GetMarketsRegionIdHistory(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "GetMarketsRegionIdHistory", arg0, arg1, arg2, arg3)
 }
 
 // Mock of OrderPublisher interface

@@ -1,6 +1,7 @@
 package fetching
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/micro/go-micro/broker"
 	"strings"
@@ -48,7 +49,7 @@ func (op *orderPublisher) PublishStateBegin(regionId int32) {
 	op.regionLock[regionId] = &sync.WaitGroup{}
 	op.regionLock[regionId].Add(1)
 	if len(op.regionCache[regionId]) == 0 || op.regionCache[regionId] == defaultRegion {
-		region, _, err := op.regionFetcher.GetUniverseRegionsRegionId(regionId, nil)
+		region, _, err := op.regionFetcher.GetUniverseRegionsRegionId(context.Background(), regionId, nil)
 
 		if err != nil {
 			//I really need to find a logging framework... not much I can do here besides pick a default region?

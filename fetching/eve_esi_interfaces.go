@@ -1,19 +1,20 @@
 package fetching
 
 import (
-	"github.com/antihax/goesi/v1"
+	"github.com/antihax/goesi/esi"
+	"golang.org/x/net/context"
 	"net/http"
 )
 
 type RegionsFetcher interface {
-	GetUniverseRegions(localVarOptionals map[string]interface{}) ([]int32, *http.Response, error)
-	GetUniverseRegionsRegionId(regionId int32, localVarOptionals map[string]interface{}) (goesiv1.GetUniverseRegionsRegionIdOk, *http.Response, error)
+	GetUniverseRegions(ctx context.Context, localVarOptionals map[string]interface{}) ([]int32, *http.Response, error)
+	GetUniverseRegionsRegionId(ctx context.Context, regionId int32, localVarOptionals map[string]interface{}) (esi.GetUniverseRegionsRegionIdOk, *http.Response, error)
 }
 
 type OrderFetcher interface {
-	GetMarketsRegionIdOrders(orderType string, regionId int32, localVarOptionals map[string]interface{}) ([]goesiv1.GetMarketsRegionIdOrders200Ok, *http.Response, error)
+	GetMarketsRegionIdOrders(ctx context.Context, orderType string, regionId int32, localVarOptionals map[string]interface{}) ([]esi.GetMarketsRegionIdOrders200Ok, *http.Response, error)
 }
 
 type HistoryFetcher interface {
-	GetMarketsRegionIdHistory(regionId int32, typeId int32, localVarOptionals map[string]interface{}) ([]goesiv1.GetMarketsRegionIdHistory200Ok, *http.Response, error)
+	GetMarketsRegionIdHistory(ctx context.Context, regionId int32, typeId int32, localVarOptionals map[string]interface{}) ([]esi.GetMarketsRegionIdHistory200Ok, *http.Response, error)
 }

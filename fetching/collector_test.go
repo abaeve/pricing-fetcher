@@ -2,7 +2,7 @@ package fetching
 
 import (
 	"fmt"
-	"github.com/antihax/goesi/v1"
+	goesiv1 "github.com/antihax/goesi/esi"
 	"github.com/goinggo/work"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -19,7 +19,7 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	pageOne := make(map[string]interface{})
 	pageOne["page"] = int32(1)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageOne).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
 			{
 				VolumeTotal:  20,
@@ -53,7 +53,7 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	pageTwo := make(map[string]interface{})
 	pageTwo["page"] = int32(2)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageTwo).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
 			{
 				VolumeTotal:  20,
@@ -89,14 +89,14 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	pageThree := make(map[string]interface{})
 	pageThree["page"] = int32(3)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageThree).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
 	pageFour := make(map[string]interface{})
 	pageFour["page"] = int32(4)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFour).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 	//END Expectations
@@ -189,7 +189,7 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	pageOne := make(map[string]interface{})
 	pageOne["page"] = int32(1)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageOne).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
 			{
 				VolumeTotal:  20,
@@ -223,7 +223,7 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	pageTwo := make(map[string]interface{})
 	pageTwo["page"] = int32(2)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageTwo).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
 			{
 				VolumeTotal:  20,
@@ -259,14 +259,14 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	pageThree := make(map[string]interface{})
 	pageThree["page"] = int32(3)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageThree).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
 	pageFour := make(map[string]interface{})
 	pageFour["page"] = int32(4)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", int32(12345), pageFour).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
@@ -385,5 +385,5 @@ func addPageWithExpectations(page int32, numberOfOrders, nextOrderId int64, regi
 	options := make(map[string]interface{})
 	options["page"] = page
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("all", regionId, options).Return(orders, nil, nil).MaxTimes(1)
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", regionId, options).Return(orders, nil, nil).MaxTimes(1)
 }

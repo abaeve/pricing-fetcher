@@ -2,7 +2,7 @@ package fetching
 
 import (
 	"errors"
-	"github.com/antihax/goesi/v1"
+	goesiv1 "github.com/antihax/goesi/esi"
 	"github.com/golang/mock/gomock"
 	"testing"
 	"time"
@@ -24,7 +24,7 @@ func TestWorker_Work(t *testing.T) {
 	options := make(map[string]interface{})
 	options["page"] = int32(1)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("orderChan", int32(123456), options).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
 			{
 				Duration:     int32(1),
@@ -90,7 +90,7 @@ func TestWorker_Work_Error(t *testing.T) {
 	options := make(map[string]interface{})
 	options["page"] = int32(1)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("orderChan", int32(123456), options).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
 			//Return an actual object just as some extra piece of mind that the error processing is happening as expected
 			{
@@ -163,7 +163,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	options := make(map[string]interface{})
 	options["page"] = int32(1)
 
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders("orderChan", int32(123456), options).Return(
+	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	)
 

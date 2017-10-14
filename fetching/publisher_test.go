@@ -3,7 +3,7 @@ package fetching
 import (
 	"encoding/json"
 	"github.com/abaeve/pricing-fetcher/mocks"
-	"github.com/antihax/goesi/v1"
+	goesiv1 "github.com/antihax/goesi/esi"
 	"github.com/golang/mock/gomock"
 	"github.com/micro/go-micro/broker"
 	"testing"
@@ -48,7 +48,7 @@ func TestOrderPublisher_PublishOrder(t *testing.T) {
 
 	payload, _ := json.Marshal(order)
 
-	mockRegionFetcher.EXPECT().GetUniverseRegionsRegionId(int32(123456), gomock.Nil()).Return(
+	mockRegionFetcher.EXPECT().GetUniverseRegionsRegionId(gomock.Any(), int32(123456), gomock.Nil()).Return(
 		goesiv1.GetUniverseRegionsRegionIdOk{
 			RegionId:    123456,
 			Description: "Herpa Derpa Blerpa doo",

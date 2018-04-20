@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/micro/go-micro/broker"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -40,7 +41,7 @@ func (op *orderPublisher) PublishOrder(order *OrderPayload) {
 
 	//Only wait to use the broker because it's the only thing that needs to region's name
 	op.regionLock[order.RegionId].Wait()
-	op.broker.Publish(orderType+"."+op.regionCache[order.RegionId], &broker.Message{
+	op.broker.Publish(orderType+"."+strconv.Itoa(int(order.RegionId)), &broker.Message{
 		Body: []byte(payload),
 	})
 }
@@ -62,13 +63,13 @@ func (op *orderPublisher) PublishStateBegin(regionId int32) {
 	}
 	op.regionLock[regionId].Done()
 
-	op.broker.Publish(op.regionCache[regionId]+".state.begin", &broker.Message{
+	op.broker.Publish(strconv.Itoa(int(regionId))+".state.begin", &broker.Message{
 		Body: []byte("Starting"),
 	})
 }
 
 func (op *orderPublisher) PublishStateEnd(regionId int32) {
-	op.broker.Publish(op.regionCache[regionId]+".state.end", &broker.Message{
+	op.broker.Publish(strconv.Itoa(int(regionId))+".state.end", &broker.Message{
 		Body: []byte("Ending"),
 	})
 }

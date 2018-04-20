@@ -55,13 +55,13 @@ func TestOrderPublisher_PublishOrder(t *testing.T) {
 			Name:        "someregion",
 		}, nil, nil,
 	)
-	mockBroker.EXPECT().Publish("someregion.state.begin", &broker.Message{
+	mockBroker.EXPECT().Publish("123456.state.begin", &broker.Message{
 		Body: []byte("Starting"),
 	})
-	mockBroker.EXPECT().Publish("sell.someregion", &broker.Message{
+	mockBroker.EXPECT().Publish("sell.123456", &broker.Message{
 		Body: payload,
 	})
-	mockBroker.EXPECT().Publish("someregion.state.end", &broker.Message{
+	mockBroker.EXPECT().Publish("123456.state.end", &broker.Message{
 		Body: []byte("Ending"),
 	})
 

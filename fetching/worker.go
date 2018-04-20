@@ -3,6 +3,7 @@ package fetching
 import (
 	"fmt"
 	goesiv1 "github.com/antihax/goesi/esi"
+	"github.com/antihax/goesi/optional"
 	"github.com/goinggo/work"
 	"golang.org/x/net/context"
 )
@@ -10,22 +11,24 @@ import (
 type OrderPayload struct {
 	goesiv1.GetMarketsRegionIdOrders200Ok
 
-	RegionId int32
+	FetchRequestId string
+	RegionId       int32
 }
 
 type orderFetcher struct {
-	client     OrderFetcher
-	orderType  string
-	page       int32
-	regionId   int32
-	out        chan<- OrderPayload
-	endReached chan<- bool
-	workerDone chan<- int32
+	client         OrderFetcher
+	orderType      string
+	page           int32
+	regionId       int32
+	out            chan<- OrderPayload
+	endReached     chan<- bool
+	workerDone     chan<- int32
+	fetchRequestId string
 }
 
 func (w *orderFetcher) Work(id int) {
-	options := make(map[string]interface{})
-	options["page"] = w.page
+	options := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	options.Page = optional.NewInt32(w.page)
 	data, _, err := w.client.GetMarketsRegionIdOrders(context.Background(), w.orderType, w.regionId, options)
 
 	if err != nil {
@@ -44,6 +47,7 @@ func (w *orderFetcher) Work(id int) {
 	for _, order := range data {
 		w.out <- OrderPayload{
 			RegionId:                      w.regionId,
+			FetchRequestId:                w.fetchRequestId,
 			GetMarketsRegionIdOrders200Ok: order,
 		}
 	}
@@ -53,6 +57,6 @@ func (w *orderFetcher) Work(id int) {
 	w.workerDone <- w.page
 }
 
-func NewWorker(client OrderFetcher, orderType string, page int32, regionId int32, out chan<- OrderPayload, endReached chan<- bool, workerDone chan<- int32) work.Worker {
-	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, endReached: endReached, workerDone: workerDone}
+func NewWorker(client OrderFetcher, orderType string, page int32, regionId int32, out chan<- OrderPayload, endReached chan<- bool, workerDone chan<- int32, fetchRequestId string) work.Worker {
+	return &orderFetcher{client: client, orderType: orderType, page: page, regionId: regionId, out: out, endReached: endReached, workerDone: workerDone, fetchRequestId: fetchRequestId}
 }

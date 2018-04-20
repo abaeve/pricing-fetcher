@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	goesiv1 "github.com/antihax/goesi/esi"
+	"github.com/antihax/goesi/optional"
 	"github.com/golang/mock/gomock"
 	"testing"
 	"time"
@@ -108,15 +109,15 @@ func TestOrderController_Fetch(t *testing.T) {
 		Duration:     40,
 	}
 
-	pageOne := make(map[string]interface{})
-	pageOne["page"] = int32(1)
+	pageOne := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageOne.Page = optional.NewInt32(int32(1))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderOne, orderTwo}, nil, nil,
 	)
 
-	pageTwo := make(map[string]interface{})
-	pageTwo["page"] = int32(2)
+	pageTwo := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageTwo.Page = optional.NewInt32(int32(2))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderThree, orderFour}, nil, nil,
@@ -124,49 +125,58 @@ func TestOrderController_Fetch(t *testing.T) {
 
 	//We have to allow both pages 3 and 4 because this interface is stupid and this case is spawning workers at a time
 	//I guess CCP don't really want people threading these requests easily?
-	pageThree := make(map[string]interface{})
-	pageThree["page"] = int32(3)
+	pageThree := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageThree.Page = optional.NewInt32(int32(3))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	pageFour := make(map[string]interface{})
-	pageFour["page"] = int32(4)
+	pageFour := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageFour.Page = optional.NewInt32(int32(4))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	pageFive := make(map[string]interface{})
-	pageFive["page"] = int32(5)
+	pageFive := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageFive.Page = optional.NewInt32(int32(5))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageFive).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	pageSix := make(map[string]interface{})
-	pageSix["page"] = int32(6)
+	pageSix := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageSix.Page = optional.NewInt32(int32(6))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageSix).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
+	//Replace the newUUID func with something constant
+	newUUID = func() (string, error) {
+		return "123456", nil
+	}
+
 	mockPublisher.EXPECT().PublishStateBegin(int32(12345))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderOne,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderTwo,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderThree,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderFour,
 	})
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
@@ -278,20 +288,20 @@ func TestOrderController_Fetch_2Regions(t *testing.T) {
 		Duration:     40,
 	}
 
-	pageOne := make(map[string]interface{})
-	pageOne["page"] = int32(1)
-	pageTwo := make(map[string]interface{})
-	pageTwo["page"] = int32(2)
+	pageOne := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageOne.Page = optional.NewInt32(int32(1))
+	pageTwo := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageTwo.Page = optional.NewInt32(int32(2))
 	//We have to allow both pages 3 and 4 because this interface is stupid and this case is spawning workers at a time
 	//I guess CCP don't really want people threading these requests easily?
-	pageThree := make(map[string]interface{})
-	pageThree["page"] = int32(3)
-	pageFour := make(map[string]interface{})
-	pageFour["page"] = int32(4)
-	pageFive := make(map[string]interface{})
-	pageFive["page"] = int32(5)
-	pageSix := make(map[string]interface{})
-	pageSix["page"] = int32(6)
+	pageThree := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageThree.Page = optional.NewInt32(int32(3))
+	pageFour := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageFour.Page = optional.NewInt32(int32(4))
+	pageFive := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageFive.Page = optional.NewInt32(int32(5))
+	pageSix := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageSix.Page = optional.NewInt32(int32(6))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{orderOne, orderTwo}, nil, nil,
@@ -331,21 +341,29 @@ func TestOrderController_Fetch_2Regions(t *testing.T) {
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
+	newUUID = func() (string, error) {
+		return "123456", nil
+	}
+
 	mockPublisher.EXPECT().PublishStateBegin(int32(12345))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderOne,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderTwo,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderThree,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12345,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderFour,
 	})
 	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
@@ -353,18 +371,22 @@ func TestOrderController_Fetch_2Regions(t *testing.T) {
 	mockPublisher.EXPECT().PublishStateBegin(int32(12346))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12346,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderOne,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12346,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderTwo,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12346,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderThree,
 	})
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:                      12346,
+		FetchRequestId:                "123456",
 		GetMarketsRegionIdOrders200Ok: orderFour,
 	})
 	mockPublisher.EXPECT().PublishStateEnd(int32(12346))

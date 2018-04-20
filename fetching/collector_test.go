@@ -3,6 +3,7 @@ package fetching
 import (
 	"fmt"
 	goesiv1 "github.com/antihax/goesi/esi"
+	"github.com/antihax/goesi/optional"
 	"github.com/goinggo/work"
 	"github.com/golang/mock/gomock"
 	"testing"
@@ -16,8 +17,8 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	//BGN Expectations
-	pageOne := make(map[string]interface{})
-	pageOne["page"] = int32(1)
+	pageOne := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageOne.Page = optional.NewInt32(int32(1))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -50,8 +51,8 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 		}, nil, nil,
 	)
 
-	pageTwo := make(map[string]interface{})
-	pageTwo["page"] = int32(2)
+	pageTwo := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageTwo.Page = optional.NewInt32(int32(2))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -86,15 +87,15 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 
 	//We have to allow both pages 3 and 4 because this interface is stupid and this case is spawning workers at a time
 	//I guess CCP don't really want people threading these requests easily?
-	pageThree := make(map[string]interface{})
-	pageThree["page"] = int32(3)
+	pageThree := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageThree.Page = optional.NewInt32(int32(3))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	pageFour := make(map[string]interface{})
-	pageFour["page"] = int32(4)
+	pageFour := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageFour.Page = optional.NewInt32(int32(4))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
@@ -186,8 +187,8 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	//Expectations
-	pageOne := make(map[string]interface{})
-	pageOne["page"] = int32(1)
+	pageOne := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageOne.Page = optional.NewInt32(int32(1))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageOne).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -220,8 +221,8 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 		}, nil, nil,
 	)
 
-	pageTwo := make(map[string]interface{})
-	pageTwo["page"] = int32(2)
+	pageTwo := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageTwo.Page = optional.NewInt32(int32(2))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageTwo).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -256,15 +257,15 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 
 	//We have to allow both pages 3 and 4 because this interface is stupid and this case is spawning workers at a time
 	//I guess CCP don't really want people threading these requests easily?
-	pageThree := make(map[string]interface{})
-	pageThree["page"] = int32(3)
+	pageThree := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageThree.Page = optional.NewInt32(int32(3))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageThree).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	pageFour := make(map[string]interface{})
-	pageFour["page"] = int32(4)
+	pageFour := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	pageFour.Page = optional.NewInt32(int32(4))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", int32(12345), pageFour).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
@@ -341,49 +342,4 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	fmt.Println("Test: Shutting down the pool")
 	pool.Shutdown()
 	close(dontPanic)
-}
-
-// A simple helper function to give me a bunch of orders for larger tests.  The numberOfOrders param should be even as this'll
-// add half the number of sell orders and half the number of buy orders
-func addPageWithExpectations(page int32, numberOfOrders, nextOrderId int64, regionId int32, mockOrderFetcher MockOrderFetcher) {
-	orders := []goesiv1.GetMarketsRegionIdOrders200Ok{}
-
-	for idx := int64(0); idx < numberOfOrders/2; idx++ {
-		orders = append(orders, goesiv1.GetMarketsRegionIdOrders200Ok{
-			VolumeTotal:  20,
-			VolumeRemain: 20,
-			TypeId:       1,
-			Range_:       "region",
-			Price:        1.1,
-			OrderId:      nextOrderId,
-			MinVolume:    2,
-			LocationId:   1234567,
-			Issued:       time.Now(),
-			IsBuyOrder:   false,
-			Duration:     40,
-		})
-		nextOrderId++
-	}
-
-	for idx := int64(0); idx < numberOfOrders/2; idx++ {
-		orders = append(orders, goesiv1.GetMarketsRegionIdOrders200Ok{
-			VolumeTotal:  20,
-			VolumeRemain: 20,
-			TypeId:       1,
-			Range_:       "region",
-			Price:        1.1,
-			OrderId:      nextOrderId,
-			MinVolume:    2,
-			LocationId:   1234567,
-			Issued:       time.Now(),
-			IsBuyOrder:   true,
-			Duration:     40,
-		})
-		nextOrderId++
-	}
-
-	options := make(map[string]interface{})
-	options["page"] = page
-
-	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "all", regionId, options).Return(orders, nil, nil).MaxTimes(1)
 }

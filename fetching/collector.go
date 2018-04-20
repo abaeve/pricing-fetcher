@@ -1,8 +1,10 @@
 package fetching
 
 import (
+	"crypto/rand"
 	"fmt"
 	"github.com/goinggo/work"
+	"io"
 	"sync"
 	"sync/atomic"
 )
@@ -21,6 +23,8 @@ type orderCollector struct {
 	spawnAnother chan bool
 
 	workerCount int64
+
+	fetchRequestId string
 }
 
 func (c *orderCollector) Work(idx int) {
@@ -29,6 +33,13 @@ func (c *orderCollector) Work(idx int) {
 	//We don't want the monitor to start until we've kicked off the first batch.
 	monitorStart := sync.WaitGroup{}
 	monitorStart.Add(1)
+
+	fetchRequestId, err := newUUID()
+	if err != nil {
+
+	}
+
+	c.fetchRequestId = fetchRequestId
 
 	//Spawner routine, incrementing the counter here because the routine will probably not add to it before we ask it
 	//to wait
@@ -81,7 +92,7 @@ func (c *orderCollector) spawner(wg *sync.WaitGroup) {
 		case <-c.spawnAnother:
 			atomic.AddInt64(&c.workerCount, 1)
 			fmt.Println("Spawner: Spawning")
-			c.pool.Run(NewWorker(c.client, "all", page, c.regionId, c.orderChan, c.endReached, c.workerDone))
+			c.pool.Run(NewWorker(c.client, "all", page, c.regionId, c.orderChan, c.endReached, c.workerDone, c.fetchRequestId))
 			page++
 			fmt.Println("Spawner: Done spawning")
 		case <-c.stopSpawning:
@@ -140,4 +151,18 @@ func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done cha
 		stopSpawning: make(chan bool),
 		spawnAnother: make(chan bool),
 	}
+}
+
+// newUUID generates a random UUID according to RFC 4122
+var newUUID = func() (string, error) {
+	uuid := make([]byte, 16)
+	n, err := io.ReadFull(rand.Reader, uuid)
+	if n != len(uuid) || err != nil {
+		return "", err
+	}
+	// variant bits; see section 4.1.1
+	uuid[8] = uuid[8]&^0xc0 | 0x80
+	// version 4 (pseudo-random); see section 4.1.3
+	uuid[6] = uuid[6]&^0xf0 | 0x40
+	return fmt.Sprintf("%x-%x-%x-%x-%x", uuid[0:4], uuid[4:6], uuid[6:8], uuid[8:10], uuid[10:]), nil
 }

@@ -3,6 +3,7 @@ package fetching
 import (
 	"errors"
 	goesiv1 "github.com/antihax/goesi/esi"
+	"github.com/antihax/goesi/optional"
 	"github.com/golang/mock/gomock"
 	"testing"
 	"time"
@@ -21,8 +22,8 @@ func TestWorker_Work(t *testing.T) {
 		timeout <- true
 	}()
 
-	options := make(map[string]interface{})
-	options["page"] = int32(1)
+	options := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	options.Page = optional.NewInt32(int32(1))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -46,7 +47,7 @@ func TestWorker_Work(t *testing.T) {
 	endReached := make(chan bool)
 	workerDone := make(chan int32)
 
-	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
+	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone, "1234")
 
 	//This is designed to work in a go routine, so do things in a go routine!
 	go fetcher.Work(1)
@@ -87,8 +88,8 @@ func TestWorker_Work_Error(t *testing.T) {
 	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
-	options := make(map[string]interface{})
-	options["page"] = int32(1)
+	options := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	options.Page = optional.NewInt32(int32(1))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{
@@ -113,7 +114,7 @@ func TestWorker_Work_Error(t *testing.T) {
 	endReached := make(chan bool)
 	workerDone := make(chan int32)
 
-	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone)
+	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, endReached, workerDone, "1234")
 
 	//Close the outbound channel because we want the work function to panic if it publishes something
 	close(out)
@@ -160,8 +161,8 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	mockOrderFetcher := NewMockOrderFetcher(mockCtrl)
 	defer mockCtrl.Finish()
 
-	options := make(map[string]interface{})
-	options["page"] = int32(1)
+	options := &goesiv1.GetMarketsRegionIdOrdersOpts{}
+	options.Page = optional.NewInt32(int32(1))
 
 	mockOrderFetcher.EXPECT().GetMarketsRegionIdOrders(gomock.Any(), "orderChan", int32(123456), options).Return(
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
@@ -171,7 +172,7 @@ func TestWorker_Work_NoResults(t *testing.T) {
 	doneChan := make(chan bool)
 	workerDone := make(chan int32)
 
-	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, doneChan, workerDone)
+	fetcher := NewWorker(mockOrderFetcher, "orderChan", 1, 123456, out, doneChan, workerDone, "1234")
 
 	//Close the outbound channel because we want the work function to panic if it publishes something to out
 	close(out)

@@ -6,13 +6,25 @@ import (
 	"github.com/antihax/goesi/optional"
 	"github.com/goinggo/work"
 	"golang.org/x/net/context"
+	"time"
 )
 
 type OrderPayload struct {
-	goesiv1.GetMarketsRegionIdOrders200Ok
+	FetchRequestId string `json:"request_id,omitempty"` /* request_id string */
+	RegionId       int32  `json:"region_id,omitempty"`  /* region_id integer */
 
-	FetchRequestId string
-	RegionId       int32
+	OrderId      int64     `json:"order_id,omitempty"`      /* order_id integer */
+	TypeId       int32     `json:"type_id,omitempty"`       /* type_id integer */
+	LocationId   int64     `json:"location_id,omitempty"`   /* location_id integer */
+	SystemId     int32     `json:"system_id,omitempty"`     /* The solar system this order was placed */
+	VolumeTotal  int32     `json:"volume_total,omitempty"`  /* volume_total integer */
+	VolumeRemain int32     `json:"volume_remain,omitempty"` /* volume_remain integer */
+	MinVolume    int32     `json:"min_volume,omitempty"`    /* min_volume integer */
+	Price        float64   `json:"price,omitempty"`         /* price number */
+	IsBuyOrder   bool      `json:"is_buy_order,omitempty"`  /* is_buy_order boolean */
+	Duration     int32     `json:"duration,omitempty"`      /* duration integer */
+	Issued       time.Time `json:"issued,omitempty"`        /* issued string */
+	Range_       string    `json:"range,omitempty"`         /* range string */
 }
 
 type orderFetcher struct {
@@ -46,9 +58,20 @@ func (w *orderFetcher) Work(id int) {
 
 	for _, order := range data {
 		w.out <- OrderPayload{
-			RegionId:                      w.regionId,
-			FetchRequestId:                w.fetchRequestId,
-			GetMarketsRegionIdOrders200Ok: order,
+			RegionId:       w.regionId,
+			FetchRequestId: w.fetchRequestId,
+			OrderId:        order.OrderId,
+			TypeId:         order.TypeId,
+			LocationId:     order.LocationId,
+			SystemId:       order.SystemId,
+			VolumeTotal:    order.VolumeTotal,
+			VolumeRemain:   order.VolumeRemain,
+			MinVolume:      order.MinVolume,
+			Price:          order.Price,
+			IsBuyOrder:     order.IsBuyOrder,
+			Duration:       order.Duration,
+			Issued:         order.Issued,
+			Range_:         order.Range_,
 		}
 	}
 

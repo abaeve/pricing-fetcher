@@ -30,20 +30,18 @@ func TestOrderPublisher_PublishOrder(t *testing.T) {
 	defer mockCtrl.Finish()
 
 	order := OrderPayload{
-		RegionId: 123456,
-		GetMarketsRegionIdOrders200Ok: goesiv1.GetMarketsRegionIdOrders200Ok{
-			IsBuyOrder:   false,
-			OrderId:      1,
-			Duration:     2000,
-			Issued:       time.Now(),
-			LocationId:   123456,
-			MinVolume:    20,
-			Price:        2.1,
-			Range_:       "region",
-			TypeId:       1,
-			VolumeRemain: 40,
-			VolumeTotal:  80,
-		},
+		RegionId:     123456,
+		IsBuyOrder:   false,
+		OrderId:      1,
+		Duration:     2000,
+		Issued:       time.Now(),
+		LocationId:   123456,
+		MinVolume:    20,
+		Price:        2.1,
+		Range_:       "region",
+		TypeId:       1,
+		VolumeRemain: 40,
+		VolumeTotal:  80,
 	}
 
 	payload, _ := json.Marshal(order)

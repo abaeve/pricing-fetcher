@@ -53,7 +53,7 @@ func initialize() {
 func main() {
 	initialize()
 
-	for idx := 0; idx < 1; idx++ {
+	for idx := 0; idx < 288; idx++ {
 		//The Forge
 		controller.Fetch(10000002)
 		//Domain
@@ -62,7 +62,7 @@ func main() {
 		controller.Fetch(10000032)
 		//Heimatar
 		controller.Fetch(10000030)
-		time.Sleep(time.Minute * 2)
+		time.Sleep(time.Minute*5 + time.Second*2)
 	}
 
 	controller.Stop()

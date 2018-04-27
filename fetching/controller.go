@@ -72,8 +72,8 @@ func (o *orderController) GetDoneChannel() chan int32 {
 }
 
 func (o *orderController) Stop() {
-	o.stop <- true
 	o.pool.Shutdown()
+	o.stop <- true
 }
 
 func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orderPublisher OrderPublisher, maxRegions int, maxDownloaders int, logFunc func(string), poolReportDelay time.Duration) (OrderController, error) {

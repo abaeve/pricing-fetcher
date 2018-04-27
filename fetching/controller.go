@@ -18,6 +18,11 @@ type OrderController interface {
 	Stop()
 }
 
+type RegionInfo struct {
+	regionId       int32
+	fetchRequestId string
+}
+
 type orderController struct {
 	regionsFetcher RegionsFetcher
 	orderClient    OrderFetcher
@@ -25,13 +30,13 @@ type orderController struct {
 	publisher      OrderPublisher
 	collectors     map[int32]work.Worker
 
-	workerDone chan int32
+	workerDone chan RegionInfo
 	orders     chan OrderPayload
 
 	fetchedRegions map[int32]*goesiv1.GetUniverseRegionsRegionIdOk
 	maxWorkers     int
 	maxRegions     int
-	start          chan int32
+	start          chan RegionInfo
 	stop           chan bool
 
 	clientDone chan int32
@@ -52,14 +57,11 @@ func (o *orderController) Fetch(regionId int32) error {
 	}
 
 	if o.collectors[regionId] == nil {
-		o.collectors[regionId] = NewCollector(o.orderClient, o.pool, o.maxWorkers/o.maxRegions, o.workerDone, regionId, o.orders)
+		o.collectors[regionId] = NewCollector(o.orderClient, o.pool, o.maxWorkers/o.maxRegions, o.start, o.workerDone, regionId, o.orders)
 	}
-
-	//Not in the mood to wait for it to queue it... just do it
-	o.start <- regionId
-	//go func() {
-	o.pool.Run(o.collectors[regionId])
-	//}()
+	go func() {
+		o.pool.Run(o.collectors[regionId])
+	}()
 
 	return nil
 }
@@ -87,11 +89,11 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 	}
 
 	collectors := make(map[int32]work.Worker)
-	doneChan := make(chan int32)
+	doneChan := make(chan RegionInfo)
 	ordersChan := make(chan OrderPayload)
 
 	regionsCache := make(map[int32]*goesiv1.GetUniverseRegionsRegionIdOk)
-	startChan := make(chan int32)
+	startChan := make(chan RegionInfo)
 	stopChan := make(chan bool)
 	clientDoneChan := make(chan int32)
 	//doPublishToClient := make(chan bool)
@@ -134,8 +136,8 @@ func NewController(regionFetcher RegionsFetcher, orderFetcher OrderFetcher, orde
 
 type publisherBinding struct {
 	publisher OrderPublisher
-	start     chan int32
-	done      chan int32
+	start     chan RegionInfo
+	done      chan RegionInfo
 	orders    chan OrderPayload
 
 	stop       chan bool
@@ -158,7 +160,7 @@ func (pb *publisherBinding) Work(id int) {
 			pb.publisher.PublishStateEnd(finishedRegion)
 			//if pb.publishDoneToClient {
 			fmt.Println("Trying to publish to client")
-			pb.clientDone <- finishedRegion
+			pb.clientDone <- finishedRegion.regionId
 			//}
 		case startedRegion := <-pb.start:
 			fmt.Println("Publisher: Publishing State Begin")

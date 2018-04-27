@@ -120,9 +120,10 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	//Build the collector and everything it needs
 	//It's designed to be run as a go routine inside a pool so the variables for it's execution start
 	//need to be set inside the struct
-	done := make(chan int32)
+	start := make(chan RegionInfo)
+	done := make(chan RegionInfo)
 	all := make(chan OrderPayload)
-	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all)
+	collector := NewCollector(mockOrderFetcher, pool, 2, start, done, 12345, all)
 
 	go collector.Work(1)
 
@@ -141,6 +142,10 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 			} else {
 				t.Errorf("Unmatched order id and type: %d", order.OrderId)
 			}
+		case regionInfo := <-start:
+			if regionInfo.regionId != int32(12345) {
+				t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionInfo.regionId)
+			}
 		}
 
 		fmt.Println("Test: Got _something_, checking if its what we want")
@@ -155,9 +160,9 @@ func TestOrderCollector_Fetch_2PagesAnd2Workers(t *testing.T) {
 	select {
 	case <-timeout:
 		t.Fatal("Test timed out waiting for done signal")
-	case regionId := <-done:
-		if regionId != int32(12345) {
-			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionId)
+	case regionInfo := <-done:
+		if regionInfo.regionId != int32(12345) {
+			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionInfo.regionId)
 		}
 		fmt.Println("Test: Done received")
 	}
@@ -289,9 +294,10 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	//Build the collector and everything it needs
 	//It's designed to be run as a go routine inside a pool so the variables for it's execution start
 	//need to be set inside the struct
-	done := make(chan int32)
+	start := make(chan RegionInfo)
+	done := make(chan RegionInfo)
 	all := make(chan OrderPayload)
-	collector := NewCollector(mockOrderFetcher, pool, 2, done, 12345, all)
+	collector := NewCollector(mockOrderFetcher, pool, 2, start, done, 12345, all)
 
 	go collector.Work(1)
 
@@ -310,6 +316,10 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 			} else {
 				t.Errorf("Unmatched order id and type: %d", order.OrderId)
 			}
+		case regionInfo := <-start:
+			if regionInfo.regionId != int32(12345) {
+				t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionInfo.regionId)
+			}
 		}
 		if foundBuyOrders == 2 && foundSellOrders == 2 {
 			break
@@ -319,11 +329,16 @@ func TestOrderCollector_Fetch_20PagesAnd10Workers(t *testing.T) {
 	select {
 	case <-timeout:
 		t.Fatal("Test timed out waiting for done signal")
-	case regionId := <-done:
-		if regionId != int32(12345) {
-			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionId)
+	case regionInfo := <-done:
+		if regionInfo.regionId != int32(12345) {
+			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionInfo)
 		}
 		fmt.Println("Test: Done received")
+	case regionInfo := <-start:
+		if regionInfo.regionId != int32(12345) {
+			t.Errorf("Expected region id: (%d) but received (%d)", 12345, regionInfo)
+		}
+		fmt.Println("Test: Start received")
 	}
 
 	dontPanic := make(chan bool)

@@ -15,7 +15,8 @@ type orderCollector struct {
 	maxWorkers int
 	regionId   int32
 	orderChan  chan OrderPayload
-	done       chan int32
+	start      chan RegionInfo
+	done       chan RegionInfo
 
 	endReached   chan bool
 	stopSpawning chan bool
@@ -40,6 +41,11 @@ func (c *orderCollector) Work(idx int) {
 	}
 
 	c.fetchRequestId = fetchRequestId
+
+	c.start <- RegionInfo{
+		regionId:       c.regionId,
+		fetchRequestId: fetchRequestId,
+	}
 
 	//Spawner routine, incrementing the counter here because the routine will probably not add to it before we ask it
 	//to wait
@@ -80,12 +86,18 @@ func (c *orderCollector) Work(idx int) {
 
 	fmt.Println("Main: exiting")
 	defer fmt.Println("Main: returning")
-	c.done <- c.regionId
+	c.done <- RegionInfo{
+		regionId:       c.regionId,
+		fetchRequestId: fetchRequestId,
+	}
 }
 
 func (c *orderCollector) spawner(wg *sync.WaitGroup) {
 	page := int32(1)
 	exit := false
+
+	//TODO: CCP is now sending an x-page header in the response, workers can each stream to this through a channel
+	//to keep it informed of the total number of pages and it could then stop spawning once it's hit the page limit.
 
 	for {
 		select {
@@ -136,13 +148,14 @@ func (c *orderCollector) monitor(wg *sync.WaitGroup, monitorStart *sync.WaitGrou
 	wg.Done()
 }
 
-func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, done chan int32, regionId int32, all chan OrderPayload) work.Worker {
+func NewCollector(client OrderFetcher, pool *work.Pool, maxWorkers int, start, done chan RegionInfo, regionId int32, all chan OrderPayload) work.Worker {
 	return &orderCollector{
 		client:      client,
 		pool:        pool,
 		maxWorkers:  maxWorkers,
 		regionId:    regionId,
 		orderChan:   all,
+		start:       start,
 		done:        done,
 		workerCount: 0,
 

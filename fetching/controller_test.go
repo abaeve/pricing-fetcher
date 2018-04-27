@@ -158,7 +158,7 @@ func TestOrderController_Fetch(t *testing.T) {
 		return "123456", nil
 	}
 
-	mockPublisher.EXPECT().PublishStateBegin(int32(12345))
+	mockPublisher.EXPECT().PublishStateBegin(gomock.AssignableToTypeOf(RegionInfo{}))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:       12345,
 		FetchRequestId: "123456",
@@ -223,7 +223,7 @@ func TestOrderController_Fetch(t *testing.T) {
 		Issued:         orderFour.Issued,
 		Range_:         orderFour.Range_,
 	})
-	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
+	mockPublisher.EXPECT().PublishStateEnd(gomock.AssignableToTypeOf(RegionInfo{}))
 	//END Expectations
 
 	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil, time.Millisecond*250)
@@ -389,7 +389,7 @@ func TestOrderController_Fetch_2Regions(t *testing.T) {
 		return "123456", nil
 	}
 
-	mockPublisher.EXPECT().PublishStateBegin(int32(12345))
+	mockPublisher.EXPECT().PublishStateBegin(gomock.AssignableToTypeOf(RegionInfo{}))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:       12345,
 		FetchRequestId: "123456",
@@ -454,9 +454,9 @@ func TestOrderController_Fetch_2Regions(t *testing.T) {
 		Issued:         orderFour.Issued,
 		Range_:         orderFour.Range_,
 	})
-	mockPublisher.EXPECT().PublishStateEnd(int32(12345))
+	mockPublisher.EXPECT().PublishStateEnd(gomock.AssignableToTypeOf(RegionInfo{}))
 
-	mockPublisher.EXPECT().PublishStateBegin(int32(12346))
+	mockPublisher.EXPECT().PublishStateBegin(gomock.AssignableToTypeOf(RegionInfo{}))
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:       12346,
 		FetchRequestId: "123456",
@@ -521,7 +521,7 @@ func TestOrderController_Fetch_2Regions(t *testing.T) {
 		Issued:         orderFour.Issued,
 		Range_:         orderFour.Range_,
 	})
-	mockPublisher.EXPECT().PublishStateEnd(int32(12346))
+	mockPublisher.EXPECT().PublishStateEnd(gomock.AssignableToTypeOf(RegionInfo{}))
 	//END Expectations
 
 	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 2, 4, nil, time.Millisecond*250)
@@ -674,7 +674,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 		[]goesiv1.GetMarketsRegionIdOrders200Ok{}, nil, nil,
 	).MaxTimes(1)
 
-	mockPublisher.EXPECT().PublishStateBegin(int32(12345)).MaxTimes(1)
+	mockPublisher.EXPECT().PublishStateBegin(gomock.AssignableToTypeOf(RegionInfo{})).MaxTimes(1)
 	mockPublisher.EXPECT().PublishOrder(&OrderPayload{
 		RegionId:     12345,
 		OrderId:      orderOne.OrderId,
@@ -735,7 +735,7 @@ func TestOrderController_Fetch_PublisherBindingLockCondition(t *testing.T) {
 		Issued:       orderFour.Issued,
 		Range_:       orderFour.Range_,
 	}).MaxTimes(1)
-	mockPublisher.EXPECT().PublishStateEnd(int32(12345)).MaxTimes(1)
+	mockPublisher.EXPECT().PublishStateEnd(gomock.AssignableToTypeOf(RegionInfo{})).MaxTimes(1)
 	//END Expectations
 
 	controller, err := NewController(mockRegionFetcher, mockOrderFetcher, mockPublisher, 1, 4, nil, time.Millisecond)

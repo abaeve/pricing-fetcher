@@ -13,8 +13,8 @@ var defaultRegion string = "unknown"
 
 type OrderPublisher interface {
 	PublishOrder(order *OrderPayload)
-	PublishStateBegin(regionId int32)
-	PublishStateEnd(regionId int32)
+	PublishStateBegin(regionInfo RegionInfo)
+	PublishStateEnd(regionInfo RegionInfo)
 }
 
 type orderPublisher struct {
@@ -46,31 +46,31 @@ func (op *orderPublisher) PublishOrder(order *OrderPayload) {
 	})
 }
 
-func (op *orderPublisher) PublishStateBegin(regionId int32) {
-	op.regionLock[regionId] = &sync.WaitGroup{}
-	op.regionLock[regionId].Add(1)
-	if len(op.regionCache[regionId]) == 0 || op.regionCache[regionId] == defaultRegion {
-		region, _, err := op.regionFetcher.GetUniverseRegionsRegionId(context.Background(), regionId, nil)
+func (op *orderPublisher) PublishStateBegin(regionInfo RegionInfo) {
+	op.regionLock[regionInfo.regionId] = &sync.WaitGroup{}
+	op.regionLock[regionInfo.regionId].Add(1)
+	if len(op.regionCache[regionInfo.regionId]) == 0 || op.regionCache[regionInfo.regionId] == defaultRegion {
+		region, _, err := op.regionFetcher.GetUniverseRegionsRegionId(context.Background(), regionInfo.regionId, nil)
 
 		if err != nil {
 			//I really need to find a logging framework... not much I can do here besides pick a default region?
-			op.regionCache[regionId] = defaultRegion
+			op.regionCache[region.RegionId] = defaultRegion
 		}
 
 		regionName := strings.ToLower(region.Name)
 		regionName = strings.Replace(regionName, " ", "-", -1)
-		op.regionCache[regionId] = regionName
+		op.regionCache[region.RegionId] = regionName
 	}
-	op.regionLock[regionId].Done()
+	op.regionLock[regionInfo.regionId].Done()
 
-	op.broker.Publish(strconv.Itoa(int(regionId))+".state.begin", &broker.Message{
+	op.broker.Publish(strconv.Itoa(int(regionInfo.regionId))+".state.begin", &broker.Message{
 		Body: []byte("Starting"),
 	})
 }
 
-func (op *orderPublisher) PublishStateEnd(regionId int32) {
-	op.broker.Publish(strconv.Itoa(int(regionId))+".state.end", &broker.Message{
-		Body: []byte("Ending"),
+func (op *orderPublisher) PublishStateEnd(regionInfo RegionInfo) {
+	op.broker.Publish(strconv.Itoa(int(regionInfo.regionId))+".state.end", &broker.Message{
+		Body: []byte(regionInfo.fetchRequestId),
 	})
 }
 

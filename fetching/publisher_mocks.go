@@ -36,7 +36,7 @@ func (_mr *_MockOrderPublisherRecorder) PublishOrder(arg0 interface{}) *gomock.C
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "PublishOrder", arg0)
 }
 
-func (_m *MockOrderPublisher) PublishStateBegin(regionId int32) {
+func (_m *MockOrderPublisher) PublishStateBegin(regionId RegionInfo) {
 	_m.ctrl.Call(_m, "PublishStateBegin", regionId)
 }
 
@@ -44,7 +44,7 @@ func (_mr *_MockOrderPublisherRecorder) PublishStateBegin(arg0 interface{}) *gom
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "PublishStateBegin", arg0)
 }
 
-func (_m *MockOrderPublisher) PublishStateEnd(regionId int32) {
+func (_m *MockOrderPublisher) PublishStateEnd(regionId RegionInfo) {
 	_m.ctrl.Call(_m, "PublishStateEnd", regionId)
 }
 

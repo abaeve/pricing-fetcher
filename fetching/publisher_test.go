@@ -59,13 +59,11 @@ func TestOrderPublisher_PublishOrder(t *testing.T) {
 	mockBroker.EXPECT().Publish("sell.123456", &broker.Message{
 		Body: payload,
 	})
-	mockBroker.EXPECT().Publish("123456.state.end", &broker.Message{
-		Body: []byte("Ending"),
-	})
+	mockBroker.EXPECT().Publish("123456.state.end", gomock.AssignableToTypeOf(&broker.Message{}))
 
 	publisher := NewPublisher(mockRegionFetcher, mockBroker)
 
-	publisher.PublishStateBegin(123456)
+	publisher.PublishStateBegin(RegionInfo{regionId: 123456})
 	publisher.PublishOrder(&order)
-	publisher.PublishStateEnd(123456)
+	publisher.PublishStateEnd(RegionInfo{regionId: 123456, fetchRequestId: ""})
 }

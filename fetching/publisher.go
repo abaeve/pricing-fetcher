@@ -64,7 +64,7 @@ func (op *orderPublisher) PublishStateBegin(regionInfo RegionInfo) {
 	op.regionLock[regionInfo.regionId].Done()
 
 	op.broker.Publish(strconv.Itoa(int(regionInfo.regionId))+".state.begin", &broker.Message{
-		Body: []byte("Starting"),
+		Body: []byte(regionInfo.fetchRequestId),
 	})
 }
 
